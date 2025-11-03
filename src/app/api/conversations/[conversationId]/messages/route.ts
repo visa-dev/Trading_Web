@@ -1,0 +1,130 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/db"
+
+interface RouteParams {
+  params: {
+    conversationId: string
+  }
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { conversationId } = params
+
+    // Verify user has access to this conversation
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        OR: [
+          { userId: session.user.id },
+          { traderId: session.user.id }
+        ]
+      }
+    })
+
+    if (!conversation) {
+      return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
+    }
+
+    const messages = await prisma.message.findMany({
+      where: {
+        conversationId
+      },
+      include: {
+        sender: {
+          select: {
+            username: true,
+            image: true,
+            role: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'asc'
+      }
+    })
+
+    return NextResponse.json({ messages })
+  } catch (error) {
+    console.error("Error fetching messages:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { conversationId } = params
+    const body = await request.json()
+    const { content } = body
+
+    if (!content || content.trim().length === 0) {
+      return NextResponse.json({ error: "Message content is required" }, { status: 400 })
+    }
+
+    // Verify user has access to this conversation
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        OR: [
+          { userId: session.user.id },
+          { traderId: session.user.id }
+        ]
+      }
+    })
+
+    if (!conversation) {
+      return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
+    }
+
+    // Create the message
+    const message = await prisma.message.create({
+      data: {
+        conversationId,
+        senderId: session.user.id,
+        content: content.trim(),
+      },
+      include: {
+        sender: {
+          select: {
+            username: true,
+            image: true,
+            role: true,
+          }
+        }
+      }
+    })
+
+    // Update conversation with last message and unread count
+    await prisma.conversation.update({
+      where: {
+        id: conversationId
+      },
+      data: {
+        lastMessage: content.trim(),
+        updatedAt: new Date(),
+        unreadCount: {
+          increment: session.user.id === conversation.userId ? 0 : 1
+        }
+      }
+    })
+
+    return NextResponse.json({ message }, { status: 201 })
+  } catch (error) {
+    console.error("Error creating message:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
