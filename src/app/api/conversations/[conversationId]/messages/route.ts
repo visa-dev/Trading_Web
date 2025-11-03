@@ -3,13 +3,10 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-interface RouteParams {
-  params: {
-    conversationId: string
-  }
-}
-
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ conversationId: string }> }
+) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -17,6 +14,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const params = await context.params
     const { conversationId } = params
 
     // Verify user has access to this conversation
@@ -59,7 +57,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   }
 }
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ conversationId: string }> }
+) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const params = await context.params
     const { conversationId } = params
     const body = await request.json()
     const { content } = body

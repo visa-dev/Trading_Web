@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions)
 
@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     const unreadCount = unreadMessages
     
     // Mock total views (in a real app, you'd track this)
-    const totalViews = posts.reduce((sum, post) => sum + Math.floor(Math.random() * 1000), 0)
+    const totalViews = posts.reduce((sum) => sum + Math.floor(Math.random() * 1000), 0)
 
     const stats = {
       totalPosts,

@@ -80,7 +80,7 @@ export function MyFXBookIframe() {
               </Button>
             </motion.div>
             <p className="text-sm text-gray-400 mt-3">
-              If the preview doesn't load properly, click the button above to open the profile in a new tab
+              If the preview doesn&apos;t load properly, click the button above to open the profile in a new tab
             </p>
           </div>
         </motion.div>

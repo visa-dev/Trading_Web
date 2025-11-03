@@ -26,7 +26,11 @@ interface PerformancePost {
   riskReward: number
   imageUrl?: string | null
   videoUrl?: string | null
+  published: boolean
   createdAt: string
+  reviews: Array<{
+    rating: number
+  }>
 }
 
 interface TradingVideo {

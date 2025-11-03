@@ -121,7 +121,7 @@ export function MyFXBookTraderProfile() {
 
         <div className="max-w-4xl mx-auto">
           <p className="text-gray-300 leading-relaxed mb-4">{traderProfile.bio}</p>
-          <p className="text-gray-400 italic">"{traderProfile.motto}"</p>
+          <p className="text-gray-400 italic">&quot;{traderProfile.motto}&quot;</p>
         </div>
       </motion.div>
 
@@ -147,7 +147,7 @@ export function MyFXBookTraderProfile() {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {traderProfile.systems.map((system, index) => (
+          {traderProfile.systems.map((system) => (
             <motion.div
               key={system.name}
               variants={itemVariants}

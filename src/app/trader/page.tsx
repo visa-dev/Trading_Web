@@ -85,7 +85,7 @@ export default function TraderPage() {
             <h3 className="text-xl font-bold text-white mb-4">Trading Philosophy</h3>
             <div className="space-y-4 text-gray-300">
               <p>
-                "Beyond Education – Towards Excellence" - Our trader believes in combining 
+                &quot;Beyond Education – Towards Excellence&quot; - Our trader believes in combining 
                 theoretical knowledge with practical experience to achieve consistent results.
               </p>
               <p>

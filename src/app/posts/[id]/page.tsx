@@ -4,12 +4,12 @@ import { PerformancePostDetails } from "@/components/performance-post-details"
 import { ReviewsSection } from "@/components/reviews-section"
 
 interface PostPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     tab?: string
-  }
+  }>
 }
 
 async function getPost(id: string) {
@@ -46,13 +46,15 @@ async function getPost(id: string) {
 }
 
 export default async function PostPage({ params, searchParams }: PostPageProps) {
-  const post = await getPost(params.id)
+  const { id } = await params
+  const { tab } = await searchParams
+  const post = await getPost(id)
 
   if (!post) {
     notFound()
   }
 
-  const activeTab = searchParams.tab || 'details'
+  const activeTab = tab || 'details'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">

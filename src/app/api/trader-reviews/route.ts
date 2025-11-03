@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const traderId = searchParams.get("traderId")
     const status = searchParams.get("status")
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (traderId) {
       where.traderId = traderId

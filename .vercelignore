@@ -1,0 +1,7 @@
+.env.local
+.env.development
+prisma/dev.db
+prisma/dev.db-journal
+*.log
+node_modules/.cache
+.DS_Store
