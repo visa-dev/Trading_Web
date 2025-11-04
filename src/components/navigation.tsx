@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Phone } from "lucide-react"
+import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Phone, Copy } from "lucide-react"
 import Link from "next/link"
 
 export function Navigation() {
@@ -81,6 +81,10 @@ export function Navigation() {
               <Link href="/academy" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
                 <GraduationCap className="w-5 h-5" />
                 <span className="font-medium">Academy</span>
+              </Link>
+              <Link href="/copy-trading" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
+                <Copy className="w-5 h-5" />
+                <span className="font-medium">Copy Trading</span>
               </Link>
               <Link href="/contact" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
                 <Phone className="w-5 h-5" />
@@ -241,6 +245,14 @@ export function Navigation() {
               >
                 <GraduationCap className="w-5 h-5" />
                 <span className="font-medium">Academy</span>
+              </Link>
+              <Link 
+                href="/copy-trading" 
+                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <Copy className="w-5 h-5" />
+                <span className="font-medium">Copy Trading</span>
               </Link>
               <Link 
                 href="/contact" 

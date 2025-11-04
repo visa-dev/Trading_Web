@@ -48,7 +48,8 @@ export default withAuth(
             req.nextUrl.pathname.startsWith('/posts') ||
             req.nextUrl.pathname.startsWith('/videos') ||
             req.nextUrl.pathname.startsWith('/contact') ||
-            req.nextUrl.pathname.startsWith('/academy')) {
+            req.nextUrl.pathname.startsWith('/academy') ||
+            req.nextUrl.pathname.startsWith('/copy-trading')) {
           return true
         }
         
@@ -74,6 +75,7 @@ export const config = {
     "/reviews/:path*",
     "/posts/:path*",
     "/videos/:path*",
-    "/profile/:path*"
+    "/profile/:path*",
+    "/copy-trading/:path*"
   ]
 }
