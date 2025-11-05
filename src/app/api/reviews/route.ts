@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type")
     const status = searchParams.get("status") // Add status filter
 
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     
     if (userId) {
       where.userId = userId

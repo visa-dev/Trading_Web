@@ -24,10 +24,10 @@ A comprehensive Next.js 14 application for showcasing trading performance with d
 
 ## 🛠️ Tech Stack
 
-- **Frontend:** Next.js 14, React 19, TypeScript
+- **Frontend:** Next.js 15, React 19, TypeScript
 - **UI Components:** shadcn/ui, Tailwind CSS
 - **Authentication:** NextAuth.js with Google OAuth
-- **Database:** MySQL with Prisma ORM
+- **Database:** SQLite (dev) / PostgreSQL (prod) with Prisma ORM
 - **File Storage:** Vercel Blob
 - **Deployment:** Vercel
 
@@ -46,7 +46,7 @@ messages (id, conversationId, senderId, content, read, createdAt)
 
 ### Prerequisites
 - Node.js 18+ 
-- MySQL database
+- SQLite (for development) / PostgreSQL (for production)
 - Google OAuth credentials (optional)
 
 ### 1. Clone and Install Dependencies
@@ -59,32 +59,46 @@ npm install
 
 ### 2. Environment Configuration
 
-Create a \`.env\` file in the root directory:
+Copy `.env.example` to `.env`:
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+Edit `.env` file:
 
 \`\`\`env
-# Database
-DATABASE_URL="mysql://username:password@localhost:3306/trading_performance"
+# Database (SQLite for development)
+DATABASE_URL="file:./dev.db"
 
 # NextAuth.js
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here"
+NEXTAUTH_SECRET="your-secret-key-here-generate-with-openssl-rand-base64-32"
 
 # Google OAuth (Optional)
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 
-# Vercel Blob (Optional)
-BLOB_READ_WRITE_TOKEN="your-vercel-blob-token"
+# Node Environment
+NODE_ENV="development"
+\`\`\`
+
+**Generate NEXTAUTH_SECRET:**
+\`\`\`bash
+openssl rand -base64 32
 \`\`\`
 
 ### 3. Database Setup
 
 \`\`\`bash
-# Push the database schema
+# Push the database schema (SQLite for dev)
 npm run db:push
 
 # Seed the database with sample data
 npm run db:seed
+
+# Or use Prisma migrations (recommended for production)
+npm run migrate
 \`\`\`
 
 ### 4. Run the Development Server
@@ -167,20 +181,32 @@ Visit [http://localhost:3000](http://localhost:3000) to see the application.
 
 ### Vercel Deployment
 
-1. Connect your GitHub repository to Vercel
-2. Set environment variables in Vercel dashboard
-3. Deploy automatically on push to main branch
+**Full deployment guide:** See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed instructions.
+
+**Quick steps:**
+1. Set up PostgreSQL database (Vercel Postgres or Neon recommended)
+2. Push code to GitHub
+3. Import repository to Vercel
+4. Configure environment variables
+5. Deploy automatically
 
 ### Environment Variables for Production
 
 \`\`\`env
-DATABASE_URL="your-production-database-url"
-NEXTAUTH_URL="https://your-domain.com"
+DATABASE_URL="postgresql://user:password@host:5432/database?schema=public"
+NEXTAUTH_URL="https://your-domain.vercel.app"
 NEXTAUTH_SECRET="your-production-secret"
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
-BLOB_READ_WRITE_TOKEN="your-vercel-blob-token"
+NODE_ENV="production"
 \`\`\`
+
+### Important Notes
+
+- Use **PostgreSQL** for production (not SQLite)
+- Update `prisma/schema.prisma` provider to `postgresql`
+- Run migrations: `npm run migrate:deploy`
+- Seed database after first deployment: `npm run db:seed`
 
 ## 🤝 Contributing
 

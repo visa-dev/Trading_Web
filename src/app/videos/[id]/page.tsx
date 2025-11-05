@@ -3,12 +3,12 @@ import { prisma } from "@/lib/db"
 import { VideoPlayer } from "@/components/video-player"
 
 interface VideoPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     tab?: string
-  }
+  }>
 }
 
 async function getVideo(id: string) {
@@ -26,13 +26,15 @@ async function getVideo(id: string) {
 }
 
 export default async function VideoPage({ params, searchParams }: VideoPageProps) {
-  const video = await getVideo(params.id)
+  const { id } = await params
+  const { tab } = await searchParams
+  const video = await getVideo(id)
 
   if (!video) {
     notFound()
   }
 
-  const activeTab = searchParams.tab || 'video'
+  const activeTab = tab || 'video'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700">

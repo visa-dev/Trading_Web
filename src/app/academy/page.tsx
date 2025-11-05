@@ -74,7 +74,7 @@ export default function AcademyPage() {
               <CardHeader>
                 <CardTitle className="text-2xl text-white flex items-center">
                   <Award className="w-6 h-6 mr-3 text-yellow-400" />
-                  What You'll Learn
+                  What You&apos;ll Learn
                 </CardTitle>
               </CardHeader>
               <CardContent>

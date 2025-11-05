@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { PerformanceCard } from "@/components/performance-card"
 import { Hero } from "@/components/hero"
 import { Footer } from "@/components/footer"
-import { MyFXBookTraderProfile } from "@/components/myfxbook-trader-profile"
 import { MyFXBookIframe } from "@/components/myfxbook-iframe"
 import { ReviewsCarousel } from "@/components/reviews-carousel"
 import { VideoCard } from "@/components/video-card"
@@ -26,7 +25,11 @@ interface PerformancePost {
   riskReward: number
   imageUrl?: string | null
   videoUrl?: string | null
+  published: boolean
   createdAt: string
+  reviews: Array<{
+    rating: number
+  }>
 }
 
 interface TradingVideo {
