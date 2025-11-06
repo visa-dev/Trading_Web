@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { signIn, getSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,7 +47,7 @@ export default function SignInPage() {
           router.push("/")
         }
       }
-    } catch (error) {
+    } catch {
       toast.error("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)

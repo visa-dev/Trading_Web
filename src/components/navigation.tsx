@@ -125,7 +125,7 @@ export function Navigation() {
                   >
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-gray-800/50 transition-colors duration-300 group">
                       <Avatar className="h-8 w-8 border-2 border-yellow-400/50 shadow-lg group-hover:border-orange-400/50 transition-all duration-300">
-                        <AvatarImage src={(session.user as any)?.image || ""} />
+                        <AvatarImage src={session.user?.image || ""} />
                         <AvatarFallback className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-white font-semibold">
                           {session.user?.name?.charAt(0) || "U"}
                         </AvatarFallback>
@@ -146,7 +146,7 @@ export function Navigation() {
                   <div className="flex flex-col space-y-3 p-4">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-12 w-12 border-2 border-yellow-400/50">
-                        <AvatarImage src={(session.user as any)?.image || ""} />
+                        <AvatarImage src={session.user?.image || ""} />
                         <AvatarFallback className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-white font-semibold text-lg">
                           {session.user?.name?.charAt(0) || "U"}
                         </AvatarFallback>
