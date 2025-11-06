@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { ExternalLink, BarChart3, TrendingUp, X, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useState } from "react"
 
 interface TradingSite {
@@ -100,7 +100,7 @@ export function MyFXBookIframe() {
             transition={{ duration: 0.3 }}
           >
             {/* Header */}
-            <div className="text-center mb-8">
+            <DialogHeader className="text-center mb-8">
               <motion.div
                 className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full mb-4"
                 animate={{ rotate: [0, 10, -10, 0] }}
@@ -108,13 +108,13 @@ export function MyFXBookIframe() {
               >
                 <BarChart3 className="w-10 h-10 text-white" />
               </motion.div>
-              <h3 className="text-3xl font-bold text-white mb-2">
+              <DialogTitle className="text-3xl font-bold text-white mb-2">
                 Select Trading Site
-              </h3>
+              </DialogTitle>
               <p className="text-gray-400">
                 Choose a site to view live trading performance
               </p>
-            </div>
+            </DialogHeader>
 
             {/* Trading Sites List */}
             <div className="space-y-4">

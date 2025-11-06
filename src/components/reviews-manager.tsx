@@ -324,12 +324,12 @@ export function ReviewsManager() {
         </div>
         
         <div className="flex space-x-2">
-          {["ALL", "PENDING", "APPROVED", "REJECTED"].map((status) => (
+          {(["ALL", "PENDING", "APPROVED", "REJECTED"] as const).map((status) => (
             <Button
               key={status}
               variant={filter === status ? "default" : "outline"}
               size="sm"
-              onClick={() => setFilter(status as any)}
+              onClick={() => setFilter(status)}
               className={filter === status ? "bg-amber-600 hover:bg-amber-700" : ""}
             >
               {status}

@@ -1,14 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { signIn, getSession } from "next-auth/react"
+import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { motion } from "framer-motion"
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, Zap, TrendingUp, Shield, BarChart3, User, CheckCircle } from "lucide-react"
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, TrendingUp, Shield, BarChart3, User, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -52,7 +52,7 @@ export default function SignUpPage() {
       
       toast.success("Account created successfully! Please sign in.")
       router.push("/auth/signin")
-    } catch (error) {
+    } catch {
       toast.error("Failed to create account. Please try again.")
     } finally {
       setIsLoading(false)
@@ -63,7 +63,7 @@ export default function SignUpPage() {
     setIsGoogleLoading(true)
     try {
       await signIn("google", { callbackUrl: "/" })
-    } catch (error) {
+    } catch {
       toast.error("Failed to sign up with Google")
     } finally {
       setIsGoogleLoading(false)

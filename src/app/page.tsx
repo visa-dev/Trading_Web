@@ -10,10 +10,8 @@ import { MyFXBookIframe } from "@/components/myfxbook-iframe"
 import { ReviewsCarousel } from "@/components/reviews-carousel"
 import { VideoCard } from "@/components/video-card"
 import { motion } from "framer-motion"
-import { TrendingUp, BarChart3, Users, Shield, CheckCircle, Award, ArrowRight, Target, Zap, Sparkles, Rocket, Brain, Eye, Video } from "lucide-react"
+import { TrendingUp, BarChart3, Shield, ArrowRight, Zap, Sparkles, Brain, Eye, Video } from "lucide-react"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface PerformancePost {
   id: string
@@ -84,7 +82,6 @@ export default function Home() {
     // Fetch posts and videos for all non-traders (including non-authenticated users)
     fetchPosts()
     fetchVideos()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, router])
 
   // Show loading while checking session or redirecting traders

@@ -232,7 +232,7 @@ export function ReviewsCarousel({ reviews: propReviews }: ReviewsCarouselProps) 
 
                     {/* Comment */}
                     <p className="text-sm text-gray-200 leading-relaxed mb-4 flex-grow text-center">
-                      "{review.comment}"
+                      &quot;{review.comment}&quot;
                     </p>
 
                     {/* User Info */}
@@ -294,7 +294,7 @@ export function ReviewsCarousel({ reviews: propReviews }: ReviewsCarouselProps) 
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">Write a Review</DialogTitle>
             <DialogDescription className="text-gray-400">
-              Share your experience with Sahan Akalanka's trading services
+              Share your experience with Sahan Akalanka&apos;s trading services
             </DialogDescription>
           </DialogHeader>
 
