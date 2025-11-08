@@ -149,72 +149,72 @@ export function ReviewsManager() {
   )
 
   const renderPostReviewCard = (review: Review) => (
-    <Card key={review.id}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start space-x-4 flex-1">
-            <Avatar>
-              <AvatarImage src={review.user.image || ""} />
-              <AvatarFallback>
-                {review.user.username.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <h4 className="font-medium">{review.user.username}</h4>
-                  <p className="text-sm text-gray-500">
-                    {review.type} Review • {new Date(review.createdAt).toLocaleDateString()}
-                  </p>
+            <Card key={review.id}>
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-4 flex-1">
+                    <Avatar>
+                      <AvatarImage src={review.user.image || ""} />
+                      <AvatarFallback>
+                        {review.user.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h4 className="font-medium">{review.user.username}</h4>
+                          <p className="text-sm text-gray-500">
+                            {review.type} Review • {new Date(review.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {renderStars(review.rating)}
+                          <Badge variant={
+                            review.status === "APPROVED" ? "default" :
+                            review.status === "REJECTED" ? "destructive" : "secondary"
+                          }>
+                            {review.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-1">
+                          Reviewing: <span className="font-medium">
+                            {review.post?.title || review.video?.title}
+                          </span>
+                        </p>
+                        {review.comment && (
+                          <p className="text-gray-700">{review.comment}</p>
+                        )}
+                      </div>
+                      
+                      {review.status === "PENDING" && (
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleReviewStatus(review.id, "APPROVED")}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <Check className="w-3 h-3 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleReviewStatus(review.id, "REJECTED")}
+                          >
+                            <X className="w-3 h-3 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  {renderStars(review.rating)}
-                  <Badge variant={
-                    review.status === "APPROVED" ? "default" :
-                    review.status === "REJECTED" ? "destructive" : "secondary"
-                  }>
-                    {review.status}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="mb-3">
-                <p className="text-sm text-gray-600 mb-1">
-                  Reviewing: <span className="font-medium">
-                    {review.post?.title || review.video?.title}
-                  </span>
-                </p>
-                {review.comment && (
-                  <p className="text-gray-700">{review.comment}</p>
-                )}
-              </div>
-              
-              {review.status === "PENDING" && (
-                <div className="flex space-x-2">
-                  <Button
-                    size="sm"
-                    onClick={() => handleReviewStatus(review.id, "APPROVED")}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Check className="w-3 h-3 mr-1" />
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleReviewStatus(review.id, "REJECTED")}
-                  >
-                    <X className="w-3 h-3 mr-1" />
-                    Reject
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+              </CardContent>
+            </Card>
   )
 
   const renderTraderReviewCard = (review: TraderReview) => (
