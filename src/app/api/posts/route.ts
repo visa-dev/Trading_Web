@@ -52,43 +52,76 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { 
-      title, 
-      description, 
-      profitLoss, 
-      winRate, 
-      drawdown, 
-      riskReward, 
-      imageUrl, 
-      videoUrl, 
-      published = false 
-    } = body
+    const {
+      title,
+      description,
+      profitLoss,
+      winRate,
+      drawdown,
+      riskReward,
+      imageUrl,
+      videoUrl,
+      published = false,
+    } = body ?? {}
 
-    // Validate required fields
-    if (!title || !description || profitLoss === undefined || winRate === undefined || drawdown === undefined || riskReward === undefined) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+    const normalizeOptionalString = (value: unknown) => {
+      if (typeof value !== "string") return null
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : null
     }
 
-    // Validate numeric values
-    if (typeof profitLoss !== "number" || typeof winRate !== "number" || typeof drawdown !== "number" || typeof riskReward !== "number") {
+    const normalizedTitle = typeof title === "string" ? title.trim() : ""
+
+    if (!normalizedTitle) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 })
+    }
+
+    const parseOptionalNumber = (value: unknown): number | null => {
+      if (value === null || value === undefined || value === "") return null
+      const numeric = typeof value === "number" ? value : Number(value)
+      if (!Number.isFinite(numeric)) {
+        throw new Error("invalid number")
+      }
+      return numeric
+    }
+
+    let normalizedProfitLoss: number | null
+    let normalizedWinRate: number | null
+    let normalizedDrawdown: number | null
+    let normalizedRiskReward: number | null
+
+    try {
+      normalizedProfitLoss = parseOptionalNumber(profitLoss)
+      normalizedWinRate = parseOptionalNumber(winRate)
+      normalizedDrawdown = parseOptionalNumber(drawdown)
+      normalizedRiskReward = parseOptionalNumber(riskReward)
+    } catch {
       return NextResponse.json({ error: "Invalid numeric values" }, { status: 400 })
     }
 
-    if (winRate < 0 || winRate > 100 || drawdown < 0 || drawdown > 100 || riskReward < 0) {
-      return NextResponse.json({ error: "Invalid metric values" }, { status: 400 })
+    if (normalizedWinRate !== null && (normalizedWinRate < 0 || normalizedWinRate > 100)) {
+      return NextResponse.json({ error: "Win rate must be between 0 and 100" }, { status: 400 })
+    }
+
+    if (normalizedDrawdown !== null && (normalizedDrawdown < 0 || normalizedDrawdown > 100)) {
+      return NextResponse.json({ error: "Drawdown must be between 0 and 100" }, { status: 400 })
+    }
+
+    if (normalizedRiskReward !== null && normalizedRiskReward < 0) {
+      return NextResponse.json({ error: "Risk/Reward must be zero or greater" }, { status: 400 })
     }
 
     const post = await prisma.performancePost.create({
       data: {
-        title,
-        description,
-        profitLoss,
-        winRate,
-        drawdown,
-        riskReward,
-        imageUrl: imageUrl || null,
-        videoUrl: videoUrl || null,
-        published: Boolean(published)
+        title: normalizedTitle,
+        description: normalizeOptionalString(description),
+        profitLoss: normalizedProfitLoss,
+        winRate: normalizedWinRate,
+        drawdown: normalizedDrawdown,
+        riskReward: normalizedRiskReward,
+        imageUrl: normalizeOptionalString(imageUrl),
+        videoUrl: normalizeOptionalString(videoUrl),
+        published: Boolean(published),
       }
     })
 

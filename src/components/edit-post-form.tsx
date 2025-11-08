@@ -10,11 +10,11 @@ import { toast } from "sonner"
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   published: boolean
@@ -26,18 +26,31 @@ interface EditPostFormProps {
 }
 
 export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
-  const [formData, setFormData] = useState({
-    title: post.title,
-    description: post.description,
-    profitLoss: post.profitLoss.toString(),
-    winRate: post.winRate.toString(),
-    drawdown: post.drawdown.toString(),
-    riskReward: post.riskReward.toString(),
-    imageUrl: post.imageUrl || "",
-    videoUrl: post.videoUrl || "",
-    published: post.published
+  const createInitialState = (p: PerformancePost) => ({
+    title: p.title,
+    description: p.description ?? "",
+    profitLoss: p.profitLoss != null ? p.profitLoss.toString() : "",
+    winRate: p.winRate != null ? p.winRate.toString() : "",
+    drawdown: p.drawdown != null ? p.drawdown.toString() : "",
+    riskReward: p.riskReward != null ? p.riskReward.toString() : "",
+    imageUrl: p.imageUrl ?? "",
+    videoUrl: p.videoUrl ?? "",
+    published: p.published,
   })
+
+  const [formData, setFormData] = useState(() => createInitialState(post))
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    setFormData(createInitialState(post))
+  }, [post])
+
+  const parseNumber = (value: string): number | null => {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+    const parsed = Number(trimmed)
+    return Number.isFinite(parsed) ? parsed : null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,11 +63,15 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          profitLoss: parseFloat(formData.profitLoss),
-          winRate: parseFloat(formData.winRate),
-          drawdown: parseFloat(formData.drawdown),
-          riskReward: parseFloat(formData.riskReward),
+          title: formData.title.trim(),
+          description: formData.description.trim() || null,
+          profitLoss: parseNumber(formData.profitLoss),
+          winRate: parseNumber(formData.winRate),
+          drawdown: parseNumber(formData.drawdown),
+          riskReward: parseNumber(formData.riskReward),
+          imageUrl: formData.imageUrl.trim() || null,
+          videoUrl: formData.videoUrl.trim() || null,
+          published: formData.published,
         }),
       })
 
@@ -92,20 +109,19 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description *</Label>
+        <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
           placeholder="Describe your trading performance..."
           rows={4}
-          required
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="profitLoss">Profit/Loss ($) *</Label>
+          <Label htmlFor="profitLoss">Profit/Loss ($)</Label>
           <Input
             id="profitLoss"
             type="number"
@@ -113,12 +129,11 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
             value={formData.profitLoss}
             onChange={(e) => handleInputChange('profitLoss', e.target.value)}
             placeholder="1500.00"
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="winRate">Win Rate (%) *</Label>
+          <Label htmlFor="winRate">Win Rate (%)</Label>
           <Input
             id="winRate"
             type="number"
@@ -128,12 +143,11 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
             value={formData.winRate}
             onChange={(e) => handleInputChange('winRate', e.target.value)}
             placeholder="75.5"
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="drawdown">Max Drawdown (%) *</Label>
+          <Label htmlFor="drawdown">Max Drawdown (%)</Label>
           <Input
             id="drawdown"
             type="number"
@@ -143,12 +157,11 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
             value={formData.drawdown}
             onChange={(e) => handleInputChange('drawdown', e.target.value)}
             placeholder="12.3"
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="riskReward">Risk/Reward Ratio *</Label>
+          <Label htmlFor="riskReward">Risk/Reward Ratio</Label>
           <Input
             id="riskReward"
             type="number"
@@ -157,7 +170,6 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
             value={formData.riskReward}
             onChange={(e) => handleInputChange('riskReward', e.target.value)}
             placeholder="1.50"
-            required
           />
         </div>
       </div>
@@ -199,7 +211,10 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => onSuccess()}
+          onClick={() => {
+            setFormData(createInitialState(post))
+            onSuccess()
+          }}
         >
           Cancel
         </Button>

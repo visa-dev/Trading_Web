@@ -16,11 +16,11 @@ import Link from "next/link"
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   published: boolean

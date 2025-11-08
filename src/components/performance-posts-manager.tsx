@@ -13,11 +13,11 @@ import { toast } from "sonner"
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   published: boolean
@@ -94,17 +94,23 @@ export function PerformancePostsManager() {
     }
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
+  const formatCurrency = (amount?: number | null) => {
+    if (typeof amount === "number" && Number.isFinite(amount)) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount)
+    }
+    return "N/A"
   }
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`
+  const formatPercentage = (value?: number | null) => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return `${value.toFixed(1)}%`
+    }
+    return "N/A"
   }
 
   if (loading) {
@@ -184,10 +190,16 @@ export function PerformancePostsManager() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map((post) => {
-            const isProfitable = post.profitLoss > 0
+            const hasProfitLoss = typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
+            const profitLossValue = hasProfitLoss ? post.profitLoss! : null
+            const isProfitable = hasProfitLoss && (profitLossValue ?? 0) > 0
             const averageRating = post.reviews.length > 0 
               ? post.reviews.reduce((sum, review) => sum + review.rating, 0) / post.reviews.length 
               : 0
+            const riskRewardDisplay = typeof post.riskReward === "number" && Number.isFinite(post.riskReward)
+              ? post.riskReward.toFixed(2)
+              : "N/A"
+            const descriptionText = post.description?.trim() || "No description provided."
 
             return (
               <Card key={post.id}>
@@ -210,14 +222,20 @@ export function PerformancePostsManager() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className={`flex items-center space-x-1 ${
-                      isProfitable ? 'text-green-600' : 'text-red-600'
+                      hasProfitLoss
+                        ? (isProfitable ? 'text-green-600' : 'text-red-600')
+                        : 'text-gray-500'
                     }`}>
-                      {isProfitable ? (
-                        <TrendingUp className="w-4 h-4" />
+                      {hasProfitLoss ? (
+                        isProfitable ? (
+                          <TrendingUp className="w-4 h-4" />
+                        ) : (
+                          <TrendingDown className="w-4 h-4" />
+                        )
                       ) : (
-                        <TrendingDown className="w-4 h-4" />
+                        <TrendingUp className="w-4 h-4" />
                       )}
-                      <span className="font-semibold">{formatCurrency(post.profitLoss)}</span>
+                      <span className="font-semibold">{formatCurrency(profitLossValue)}</span>
                     </div>
                     {averageRating > 0 && (
                       <div className="text-sm text-gray-600">
@@ -227,7 +245,7 @@ export function PerformancePostsManager() {
                   </div>
 
                   <p className="text-sm text-gray-600 line-clamp-3">
-                    {post.description}
+                    {descriptionText}
                   </p>
 
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -237,7 +255,7 @@ export function PerformancePostsManager() {
                     </div>
                     <div>
                       <span className="text-gray-500">Risk/Reward:</span>
-                      <span className="ml-1 font-medium">{post.riskReward.toFixed(2)}</span>
+                      <span className="ml-1 font-medium">{riskRewardDisplay}</span>
                     </div>
                   </div>
 

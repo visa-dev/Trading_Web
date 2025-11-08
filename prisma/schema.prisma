@@ -43,6 +43,7 @@ model User {
   username      String    @unique
   role          UserRole  @default(USER)
   image         String?
+  passwordHash  String?
   createdAt     DateTime  @default(now())
   
   accounts      Account[]
@@ -66,11 +67,11 @@ model VerificationToken {
 model PerformancePost {
   id           String    @id @default(cuid())
   title        String
-  description  String
-  profitLoss   Float
-  winRate      Float
-  drawdown     Float
-  riskReward   Float
+  description  String?
+  profitLoss   Float?
+  winRate      Float?
+  drawdown     Float?
+  riskReward   Float?
   imageUrl     String?
   videoUrl     String?
   published    Boolean   @default(false)

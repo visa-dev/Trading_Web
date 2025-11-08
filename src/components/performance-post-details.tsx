@@ -12,11 +12,11 @@ import { useState, useEffect } from "react"
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   createdAt: Date
@@ -47,20 +47,50 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
       </div>
     )
   }
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
+  const formatCurrency = (amount?: number | null) => {
+    if (typeof amount === "number" && Number.isFinite(amount)) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount)
+    }
+    return "N/A"
   }
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`
+  const formatPercentage = (value?: number | null) => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return `${value.toFixed(1)}%`
+    }
+    return "N/A"
   }
 
-  const isProfitable = post.profitLoss > 0
+  const hasProfitLoss = typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
+  const profitLossValue = hasProfitLoss ? post.profitLoss! : null
+  const isProfitable = hasProfitLoss && (profitLossValue ?? 0) > 0
+  const winRateValue = typeof post.winRate === "number" && Number.isFinite(post.winRate) ? post.winRate : null
+  const drawdownValue = typeof post.drawdown === "number" && Number.isFinite(post.drawdown) ? post.drawdown : null
+  const riskRewardValue = typeof post.riskReward === "number" && Number.isFinite(post.riskReward) ? post.riskReward : null
+
+  const profitLossDisplay = formatCurrency(profitLossValue)
+  const winRateDisplay = formatPercentage(winRateValue)
+  const drawdownDisplay = formatPercentage(drawdownValue)
+  const riskRewardDisplay = typeof riskRewardValue === "number" ? riskRewardValue.toFixed(2) : "N/A"
+  const descriptionText = post.description?.trim() || "No description provided."
+  const profitBadgeClasses = hasProfitLoss
+    ? (isProfitable
+        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+        : "bg-gradient-to-r from-red-500 to-pink-500 text-white")
+    : "bg-gradient-to-r from-slate-600 to-slate-700 text-white/80"
+  const profitCardClasses = hasProfitLoss
+    ? (isProfitable
+        ? "bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20"
+        : "bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20")
+    : "bg-gradient-to-br from-slate-600/10 to-slate-700/10 border-slate-500/20"
+  const profitTextColor = hasProfitLoss
+    ? (isProfitable ? "text-green-400" : "text-red-400")
+    : "text-gray-400"
 
   return (
     <motion.div
@@ -139,15 +169,19 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <Badge 
-                  variant={isProfitable ? "default" : "destructive"} 
-                  className="text-lg px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-lg"
+                  variant={hasProfitLoss ? (isProfitable ? "default" : "destructive") : "secondary"} 
+                  className={`text-lg px-6 py-3 ${profitBadgeClasses} border-0 shadow-lg`}
                 >
-                  {isProfitable ? (
-                    <TrendingUp className="w-5 h-5 mr-2" />
+                  {hasProfitLoss ? (
+                    isProfitable ? (
+                      <TrendingUp className="w-5 h-5 mr-2" />
+                    ) : (
+                      <TrendingDown className="w-5 h-5 mr-2" />
+                    )
                   ) : (
-                    <TrendingDown className="w-5 h-5 mr-2" />
+                    <TrendingUp className="w-5 h-5 mr-2 text-gray-200" />
                   )}
-                  {formatCurrency(post.profitLoss)}
+                  {profitLossDisplay}
                 </Badge>
               </motion.div>
             </div>
@@ -184,7 +218,7 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
                 <p className="text-lg text-gray-300 leading-relaxed">
-                  {post.description}
+                  {descriptionText}
                 </p>
               </motion.div>
 
@@ -208,7 +242,7 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-blue-400">{formatPercentage(post.winRate)}</div>
+                      <div className="text-3xl font-bold text-blue-400">{winRateDisplay}</div>
                       <p className="text-xs text-gray-400 mt-1">
                         Percentage of winning trades
                       </p>
@@ -229,7 +263,7 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-green-400">{post.riskReward.toFixed(2)}</div>
+                      <div className="text-3xl font-bold text-green-400">{riskRewardDisplay}</div>
                       <p className="text-xs text-gray-400 mt-1">
                         Risk to reward ratio
                       </p>
@@ -251,7 +285,7 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold text-red-400">
-                        {formatPercentage(post.drawdown)}
+                        {drawdownDisplay}
                       </div>
                       <p className="text-xs text-gray-400 mt-1">
                         Maximum peak-to-trough decline
@@ -265,24 +299,24 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 1.4 }}
                 >
-                  <Card className={`card-material hover:shadow-lg transition-shadow duration-300 ${
-                    isProfitable 
-                      ? 'bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20' 
-                      : 'bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20'
-                  }`}>
+                  <Card className={`card-material hover:shadow-lg transition-shadow duration-300 ${profitCardClasses}`}>
                     <CardHeader className="pb-2">
                       <div className="flex items-center space-x-2">
-                        {isProfitable ? (
-                          <TrendingUp className="w-5 h-5 text-green-400" />
+                        {hasProfitLoss ? (
+                          isProfitable ? (
+                            <TrendingUp className="w-5 h-5 text-green-400" />
+                          ) : (
+                            <TrendingDown className="w-5 h-5 text-red-400" />
+                          )
                         ) : (
-                          <TrendingDown className="w-5 h-5 text-red-400" />
+                          <TrendingUp className="w-5 h-5 text-gray-400" />
                         )}
                         <CardTitle className="text-sm font-medium text-white">P&L</CardTitle>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className={`text-3xl font-bold ${isProfitable ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency(post.profitLoss)}
+                      <div className={`text-3xl font-bold ${profitTextColor}`}>
+                        {profitLossDisplay}
                       </div>
                       <p className="text-xs text-gray-400 mt-1">
                         Total profit/loss

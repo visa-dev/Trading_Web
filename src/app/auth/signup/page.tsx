@@ -32,7 +32,7 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match")
       return
@@ -43,16 +43,47 @@ export default function SignUpPage() {
       return
     }
 
+    const normalizedEmail = formData.email.trim().toLowerCase()
+    const trimmedName = formData.name.trim()
+
     setIsLoading(true)
 
     try {
-      // Here you would typically make an API call to create the user account
-      // For now, we'll simulate the process
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      toast.success("Account created successfully! Please sign in.")
-      router.push("/auth/signin")
-    } catch {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          email: normalizedEmail,
+          password: formData.password,
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        toast.error(data?.error ?? "Failed to create account. Please try again.")
+        return
+      }
+
+      toast.success("Account created successfully!")
+
+      const signInResult = await signIn("credentials", {
+        redirect: false,
+        email: normalizedEmail,
+        password: formData.password,
+      })
+
+      if (signInResult?.error) {
+        toast.info("Account created. Please sign in with your credentials.")
+        router.push("/auth/signin")
+      } else {
+        router.push("/")
+      }
+    } catch (error) {
+      console.error("Error registering user:", error)
       toast.error("Failed to create account. Please try again.")
     } finally {
       setIsLoading(false)

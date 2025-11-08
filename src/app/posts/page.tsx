@@ -14,11 +14,11 @@ import { Badge } from "@/components/ui/badge"
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   published: boolean
@@ -58,9 +58,13 @@ export default function PostsPage() {
     }
   }
 
+  const searchLower = searchTerm.toLowerCase()
+
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const descriptionText = (post.description || "").toLowerCase()
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchLower) ||
+      descriptionText.includes(searchLower)
 
     if (filterPeriod === "all") return matchesSearch
     
@@ -84,11 +88,24 @@ export default function PostsPage() {
 
   const getPerformanceStats = () => {
     if (posts.length === 0) return { totalTrades: 0, avgWinRate: 0, totalProfit: 0 }
-    
+
     const totalTrades = posts.length
-    const avgWinRate = posts.reduce((sum, post) => sum + post.winRate, 0) / totalTrades
-    const totalProfit = posts.reduce((sum, post) => sum + post.profitLoss, 0)
-    
+
+    const winRateValues = posts
+      .map((post) => (typeof post.winRate === "number" && Number.isFinite(post.winRate) ? post.winRate : null))
+      .filter((value): value is number => value !== null)
+
+    const avgWinRate = winRateValues.length
+      ? winRateValues.reduce((sum, value) => sum + value, 0) / winRateValues.length
+      : 0
+
+    const totalProfit = posts.reduce((sum, post) => {
+      const value = typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
+        ? post.profitLoss
+        : 0
+      return sum + value
+    }, 0)
+
     return { totalTrades, avgWinRate, totalProfit }
   }
 

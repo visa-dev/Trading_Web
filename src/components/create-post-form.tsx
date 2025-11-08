@@ -12,7 +12,7 @@ interface CreatePostFormProps {
 }
 
 export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     title: "",
     description: "",
     profitLoss: "",
@@ -22,8 +22,16 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
     imageUrl: "",
     videoUrl: "",
     published: false
-  })
+  }
+  const [formData, setFormData] = useState(initialFormState)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const parseNumber = (value: string): number | null => {
+    const trimmed = value.trim()
+    if (!trimmed) return null
+    const parsed = Number(trimmed)
+    return Number.isFinite(parsed) ? parsed : null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,16 +44,21 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
-          profitLoss: parseFloat(formData.profitLoss),
-          winRate: parseFloat(formData.winRate),
-          drawdown: parseFloat(formData.drawdown),
-          riskReward: parseFloat(formData.riskReward),
+          title: formData.title.trim(),
+          description: formData.description.trim() || null,
+          profitLoss: parseNumber(formData.profitLoss),
+          winRate: parseNumber(formData.winRate),
+          drawdown: parseNumber(formData.drawdown),
+          riskReward: parseNumber(formData.riskReward),
+          imageUrl: formData.imageUrl.trim() || null,
+          videoUrl: formData.videoUrl.trim() || null,
+          published: formData.published,
         }),
       })
 
       if (response.ok) {
         toast.success('Post created successfully!')
+        setFormData(initialFormState)
         onSuccess()
       } else {
         toast.error('Failed to create post')
@@ -78,20 +91,19 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description *</Label>
+        <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
           placeholder="Describe your trading performance..."
           rows={4}
-          required
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="profitLoss">Profit/Loss ($) *</Label>
+          <Label htmlFor="profitLoss">Profit/Loss ($)</Label>
           <Input
             id="profitLoss"
             type="number"
@@ -99,12 +111,11 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
             value={formData.profitLoss}
             onChange={(e) => handleInputChange('profitLoss', e.target.value)}
             placeholder="1500.00"
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="winRate">Win Rate (%) *</Label>
+          <Label htmlFor="winRate">Win Rate (%)</Label>
           <Input
             id="winRate"
             type="number"
@@ -114,12 +125,11 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
             value={formData.winRate}
             onChange={(e) => handleInputChange('winRate', e.target.value)}
             placeholder="75.5"
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="drawdown">Max Drawdown (%) *</Label>
+          <Label htmlFor="drawdown">Max Drawdown (%)</Label>
           <Input
             id="drawdown"
             type="number"
@@ -129,12 +139,11 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
             value={formData.drawdown}
             onChange={(e) => handleInputChange('drawdown', e.target.value)}
             placeholder="12.3"
-            required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="riskReward">Risk/Reward Ratio *</Label>
+          <Label htmlFor="riskReward">Risk/Reward Ratio</Label>
           <Input
             id="riskReward"
             type="number"
@@ -143,7 +152,6 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
             value={formData.riskReward}
             onChange={(e) => handleInputChange('riskReward', e.target.value)}
             placeholder="1.50"
-            required
           />
         </div>
       </div>
@@ -185,7 +193,7 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
         <Button
           type="button"
           variant="outline"
-          onClick={() => onSuccess()}
+          onClick={() => { setFormData(initialFormState); onSuccess(); }}
         >
           Cancel
         </Button>
