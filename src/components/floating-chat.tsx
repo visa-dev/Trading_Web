@@ -82,11 +82,10 @@ export function FloatingChat() {
     }
   }, [isOpen, session, conversationId])
 
-  // Poll for new messages when chat is open and conversationId exists
+  // Fetch messages once when chat opens and conversation is ready
   useEffect(() => {
     if (isOpen && conversationId && session) {
-      const interval = setInterval(fetchMessages, 3000)
-      return () => clearInterval(interval)
+      fetchMessages()
     }
   }, [isOpen, conversationId, session, fetchMessages])
 

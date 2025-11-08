@@ -50,15 +50,6 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
 
   useEffect(() => {
     fetchConversations()
-    
-    // Auto-refresh conversations every 10 seconds
-    const interval = setInterval(() => {
-      fetchConversations()
-    }, 10000)
-
-    return () => {
-      clearInterval(interval)
-    }
   }, [fetchConversations])
 
   const startNewConversation = async () => {
