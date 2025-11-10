@@ -6,7 +6,7 @@ import { TrendingUp, TrendingDown, Target, Shield, ArrowRight, Eye, Calendar, Ch
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { cardVariants, itemVariants } from "@/lib/animations"
+import { itemVariants } from "@/lib/animations"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -14,6 +14,7 @@ interface PerformancePost {
   id: string
   title: string
   description?: string | null
+  type: "PERFORMANCE" | "ANALYTICS"
   profitLoss?: number | null
   winRate?: number | null
   drawdown?: number | null
@@ -34,6 +35,8 @@ interface PerformanceCardProps {
 export function PerformanceCard({ post }: PerformanceCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  const isPerformance = post.type === "PERFORMANCE"
 
   const handleViewAnalysis = async () => {
     setIsLoading(true)
@@ -60,7 +63,7 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
     return "N/A"
   }
 
-  const hasProfitLoss = typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
+  const hasProfitLoss = isPerformance && typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
   const profitLossValue = hasProfitLoss ? post.profitLoss! : null
   const isProfitable = hasProfitLoss && (profitLossValue ?? 0) > 0
 
@@ -90,9 +93,9 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
     return "from-red-500/10 to-pink-500/10"
   }
 
-  const winRateValue = typeof post.winRate === "number" && Number.isFinite(post.winRate) ? post.winRate : null
-  const drawdownValue = typeof post.drawdown === "number" && Number.isFinite(post.drawdown) ? post.drawdown : null
-  const riskRewardValue = typeof post.riskReward === "number" && Number.isFinite(post.riskReward) ? post.riskReward : null
+  const winRateValue = isPerformance && typeof post.winRate === "number" && Number.isFinite(post.winRate) ? post.winRate : null
+  const drawdownValue = isPerformance && typeof post.drawdown === "number" && Number.isFinite(post.drawdown) ? post.drawdown : null
+  const riskRewardValue = isPerformance && typeof post.riskReward === "number" && Number.isFinite(post.riskReward) ? post.riskReward : null
 
   const winRateDisplay = formatPercentage(winRateValue)
   const drawdownDisplay = formatPercentage(drawdownValue)
@@ -129,22 +132,28 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
               whileHover={{ scale: 1.1 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
-              {hasProfitLoss ? (
-                <Badge
-                  className={`px-4 py-2 text-sm font-bold ${
-                    isProfitable ? 'badge-success' : 'badge-danger'
-                  }`}
-                >
-                  {isProfitable ? (
-                    <TrendingUp className="w-4 h-4 mr-1" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 mr-1" />
-                  )}
-                  {profitLossDisplay}
-                </Badge>
+              {isPerformance ? (
+                hasProfitLoss ? (
+                  <Badge
+                    className={`px-4 py-2 text-sm font-bold ${
+                      isProfitable ? 'badge-success' : 'badge-danger'
+                    }`}
+                  >
+                    {isProfitable ? (
+                      <TrendingUp className="w-4 h-4 mr-1" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 mr-1" />
+                    )}
+                    {profitLossDisplay}
+                  </Badge>
+                ) : (
+                  <Badge className="badge-info px-4 py-2 text-sm font-bold">
+                    No P&L Data
+                  </Badge>
+                )
               ) : (
                 <Badge className="badge-info px-4 py-2 text-sm font-bold">
-                  No P&L Data
+                  Analytics
                 </Badge>
               )}
             </motion.div>
@@ -162,7 +171,7 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
             </motion.div>
           </div>
 
-          {/* AI indicator with Navy & Gold styling */}
+          {/* Edge indicator with Navy & Gold styling */}
           <div className="absolute bottom-4 left-4">
             <motion.div
               className="flex items-center space-x-1 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium text-blue-400"
@@ -170,7 +179,7 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
               transition={{ duration: 2, repeat: Infinity }}
             >
               <Zap className="w-3 h-3" />
-              <span>AI-Powered</span>
+              <span>Signal-Driven</span>
             </motion.div>
           </div>
 
@@ -201,10 +210,17 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
                         <Calendar className="w-4 h-4" />
                         <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <div className={`flex items-center space-x-2 font-medium ${getPerformanceColor(winRateValue)}`}>
-                        <Target className="w-4 h-4" />
-                        <span>{winRateDisplay} Win Rate</span>
-                      </div>
+                      {isPerformance ? (
+                        <div className={`flex items-center space-x-2 font-medium ${getPerformanceColor(winRateValue)}`}>
+                          <Target className="w-4 h-4" />
+                          <span>{winRateDisplay} Win Rate</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2 font-medium text-blue-300">
+                          <Target className="w-4 h-4" />
+                          <span>Analytics Insight</span>
+                        </div>
+                      )}
                     </div>
                     {post.reviews.length > 0 && (
                       <div className="flex items-center space-x-2">
@@ -223,63 +239,67 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
             {descriptionText}
           </p>
 
-          {/* Key metrics with Navy & Gold styling */}
-          <div className="grid grid-cols-2 gap-4">
-            <motion.div 
-              className={`bg-gradient-to-br ${getPerformanceBg(winRateValue)} p-4 rounded-xl border border-blue-500/20 hover:border-blue-400/50 transition-all duration-300`}
-              whileHover={{ scale: 1.02, y: -2 }}
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-10 h-10 bg-gradient-to-r ${getPerformanceBg(winRateValue)} rounded-xl flex items-center justify-center`}>
-                  <Target className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-blue-400 uppercase tracking-wide">Win Rate</div>
-                  <div className="text-lg font-bold text-blue-300">{winRateDisplay}</div>
-                </div>
+          {isPerformance && (
+            <>
+              {/* Key metrics with Navy & Gold styling */}
+              <div className="grid grid-cols-2 gap-4">
+                <motion.div 
+                  className={`bg-gradient-to-br ${getPerformanceBg(winRateValue)} p-4 rounded-xl border border-blue-500/20 hover:border-blue-400/50 transition-all duration-300`}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 bg-gradient-to-r ${getPerformanceBg(winRateValue)} rounded-xl flex items-center justify-center`}>
+                      <Target className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-blue-400 uppercase tracking-wide">Win Rate</div>
+                      <div className="text-lg font-bold text-blue-300">{winRateDisplay}</div>
+                    </div>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  className="bg-gradient-to-br from-yellow-500/10 to-blue-500/10 p-4 rounded-xl border border-yellow-500/20 hover:border-yellow-400/50 transition-all duration-300"
+                  whileHover={{ scale: 1.02, y: -2 }}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-blue-500 rounded-xl flex items-center justify-center">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-yellow-400 uppercase tracking-wide">Risk/Reward</div>
+                      <div className="text-lg font-bold text-yellow-300">{riskRewardDisplay}</div>
+                    </div>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-            
-            <motion.div 
-              className="bg-gradient-to-br from-yellow-500/10 to-blue-500/10 p-4 rounded-xl border border-yellow-500/20 hover:border-yellow-400/50 transition-all duration-300"
-              whileHover={{ scale: 1.02, y: -2 }}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-blue-500 rounded-xl flex items-center justify-center">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-yellow-400 uppercase tracking-wide">Risk/Reward</div>
-                  <div className="text-lg font-bold text-yellow-300">{riskRewardDisplay}</div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
 
-          {/* Drawdown indicator with Navy & Gold styling */}
-          <motion.div
-            className="bg-gradient-to-br from-red-500/10 to-pink-500/10 p-4 rounded-xl border border-red-500/20 hover:border-red-400/50 transition-all duration-300"
-            whileHover={{ scale: 1.02, y: -2 }}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <div className="text-xs font-medium text-red-400 uppercase tracking-wide">Max Drawdown</div>
-                  <div className="text-lg font-bold text-red-300">{drawdownDisplay}</div>
-                </div>
-              </div>
-              <motion.div 
-                className={drawdownValue !== null ? "badge-warning" : "badge-info"}
-                animate={{ opacity: [0.7, 1, 0.7] }}
-                transition={{ duration: 2, repeat: Infinity }}
+              {/* Drawdown indicator with Navy & Gold styling */}
+              <motion.div
+                className="bg-gradient-to-br from-red-500/10 to-pink-500/10 p-4 rounded-xl border border-red-500/20 hover:border-red-400/50 transition-all duration-300"
+                whileHover={{ scale: 1.02, y: -2 }}
               >
-                {drawdownValue !== null ? "Risk Level" : "No Data"}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center">
+                      <TrendingDown className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-red-400 uppercase tracking-wide">Max Drawdown</div>
+                      <div className="text-lg font-bold text-red-300">{drawdownDisplay}</div>
+                    </div>
+                  </div>
+                  <motion.div 
+                    className={drawdownValue !== null ? "badge-warning" : "badge-info"}
+                    animate={{ opacity: [0.7, 1, 0.7] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    {drawdownValue !== null ? "Risk Level" : "No Data"}
+                  </motion.div>
+                </div>
               </motion.div>
-            </div>
-          </motion.div>
+            </>
+          )}
 
           {/* Reviews Section */}
           {post.reviews.length > 0 && (

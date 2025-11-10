@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Phone, Mail, MapPin, Clock, Send, User, MessageSquare, CheckCircle } from "lucide-react"
+import { Phone, Mail, Clock, Send, User, MessageSquare, CheckCircle } from "lucide-react"
 import { toast } from "sonner"
 
 export default function ContactPage() {
@@ -105,10 +105,6 @@ export default function ContactPage() {
                   <div className="flex items-center space-x-3">
                     <Phone className="w-5 h-5 text-yellow-400" />
                     <span className="text-gray-300">+94 77 638 7655</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">New York, USA</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Clock className="w-5 h-5 text-yellow-400" />

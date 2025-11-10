@@ -41,6 +41,7 @@ export async function POST(request: Request) {
     const name: string | undefined = body?.name
     const email: string | undefined = body?.email
     const password: string | undefined = body?.password
+    const imageUrl: unknown = body?.imageUrl
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 })
@@ -75,18 +76,23 @@ export async function POST(request: Request) {
     const username = await generateUniqueUsername(trimmedName)
     const passwordHash = await bcrypt.hash(password, 10)
 
+    const sanitizedImageUrl =
+      typeof imageUrl === "string" && imageUrl.trim().length > 0 ? imageUrl.trim() : null
+
     const user = await prisma.user.create({
       data: {
         email: normalizedEmail,
         username,
         passwordHash,
-        role: "USER"
+        role: "USER",
+        image: sanitizedImageUrl ?? undefined
       },
       select: {
         id: true,
         email: true,
         username: true,
-        role: true
+        role: true,
+        image: true
       }
     })
 

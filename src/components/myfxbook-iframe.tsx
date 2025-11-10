@@ -54,7 +54,7 @@ export function MyFXBookIframe() {
             <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Live Performance</span>
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-            View MyFXBook
+            View Live Performance
             <span className="block gradient-text-gold animate-gradient" style={{ backgroundSize: "200% 200%" }}>
               Trading Channels
             </span>
@@ -82,7 +82,7 @@ export function MyFXBookIframe() {
                   className="btn-material text-lg px-12 py-8 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-2xl hover:shadow-yellow-500/50"
                 >
                   <TrendingUp className="w-6 h-6 mr-3" />
-                  View Channels
+                  View My Live Performance
                   <Sparkles className="w-6 h-6 ml-3" />
                 </Button>
               </motion.div>
@@ -109,7 +109,7 @@ export function MyFXBookIframe() {
                 <BarChart3 className="w-10 h-10 text-white" />
               </motion.div>
               <DialogTitle className="text-3xl font-bold text-white mb-2">
-                Select Trading Site
+                View Live Performance
               </DialogTitle>
               <p className="text-gray-400">
                 Choose a site to view live trading performance

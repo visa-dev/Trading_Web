@@ -1,11 +1,10 @@
-import { NextAuthOptions } from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -48,6 +47,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.username,
           role: user.role,
+          image: user.image ?? null,
+          bio: (user as any).bio ?? null,
         }
       }
     })
@@ -56,22 +57,49 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }: { token: any; user?: any; trigger?: string }) {
+      const mutableToken = token as any
       if (user) {
-        token.role = user.role
-        token.name = user.name
-        token.email = user.email
-        token.picture = user.image
+        mutableToken.role = (user as any).role
+        mutableToken.name = user.name
+        mutableToken.email = user.email
+        mutableToken.picture = (user as any).image ?? null
+        mutableToken.bio = (user as any).bio ?? null
       }
-      return token
+      if (trigger === "update" && mutableToken.sub) {
+        const latestUser = await prisma.user.findUnique({
+          where: { id: mutableToken.sub },
+        })
+        if (latestUser) {
+          const latest = latestUser as any
+          mutableToken.name = latest.username ?? mutableToken.name
+          mutableToken.email = latest.email ?? mutableToken.email
+          mutableToken.picture = latest.image ?? mutableToken.picture ?? null
+          mutableToken.role = latest.role ?? mutableToken.role
+          mutableToken.bio = latest.bio ?? mutableToken.bio ?? null
+        }
+      }
+      return mutableToken
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub!
-        session.user.name = token.name as string
-        session.user.email = token.email as string
-        session.user.image = token.picture as string
-        session.user.role = token.role as string
+    async session({ session, token }: { session: any; token: any }) {
+      const mutableToken = token as any
+      const mutableSessionUser = session.user as any
+
+      if (mutableToken) {
+        mutableSessionUser.id = mutableToken.sub ?? mutableSessionUser.id
+        if (typeof mutableToken.name === "string") {
+          mutableSessionUser.name = mutableToken.name
+        }
+        if (typeof mutableToken.email === "string") {
+          mutableSessionUser.email = mutableToken.email
+        }
+        mutableSessionUser.image =
+          typeof mutableToken.picture === "string" ? mutableToken.picture : mutableSessionUser.image ?? null
+        if (typeof mutableToken.role === "string") {
+          mutableSessionUser.role = mutableToken.role
+        }
+        mutableSessionUser.bio =
+          typeof mutableToken.bio === "string" ? mutableToken.bio : mutableSessionUser.bio ?? null
       }
       return session
     },

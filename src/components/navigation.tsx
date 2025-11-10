@@ -19,6 +19,7 @@ export function Navigation() {
   const { data: session, status } = useSession()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const sessionRole = (session?.user as { role?: string } | undefined)?.role ?? null
 
   useEffect(() => {
     const handleScroll = () => {
@@ -46,7 +47,7 @@ export function Navigation() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            {session?.user?.role === "TRADER" ? (
+            {sessionRole === "TRADER" ? (
               <button
                 onClick={() => {
                   if (typeof window !== 'undefined') {
@@ -72,7 +73,7 @@ export function Navigation() {
           </motion.div>
 
           {/* Center Navigation - For all users except traders */}
-          {!session || session.user?.role !== "TRADER" ? (
+          {!session || sessionRole !== "TRADER" ? (
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/posts" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
                 <TrendingUp className="w-5 h-5" />
@@ -94,7 +95,7 @@ export function Navigation() {
           ) : null}
 
           {/* Mobile Menu Button - For all users except traders */}
-          {!session || session.user?.role !== "TRADER" ? (
+          {!session || sessionRole !== "TRADER" ? (
             <div className="md:hidden">
               <Button
                 variant="ghost"
@@ -161,25 +162,27 @@ export function Navigation() {
                     </div>
                     <div className="flex items-center justify-center">
                       <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        session.user?.role === "TRADER" 
+                        sessionRole === "TRADER" 
                           ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" 
                           : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                       }`}>
-                        {session.user?.role}
+                        {sessionRole ?? "USER"}
                       </div>
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-gray-700" />
                   
                   <div className="py-2">
-                    <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
-                      <Link href="/profile" className="flex items-center space-x-3 px-4 py-2">
-                        <User className="w-4 h-4" />
-                        <span className="text-white">Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    {sessionRole !== "TRADER" && (
+                      <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
+                        <Link href="/profile" className="flex items-center space-x-3 px-4 py-2">
+                          <User className="w-4 h-4" />
+                          <span className="text-white">Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     
-                    {session.user?.role === "TRADER" && (
+                    {sessionRole === "TRADER" && (
                       <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
                         <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-2">
                           <BarChart3 className="w-4 h-4 text-yellow-400" />
@@ -222,7 +225,7 @@ export function Navigation() {
 
       {/* Mobile Navigation Menu */}
       <AnimatePresence>
-        {isMobileMenuOpen && (!session || session.user?.role !== "TRADER") && (
+        {isMobileMenuOpen && (!session || sessionRole !== "TRADER") && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -262,6 +265,18 @@ export function Navigation() {
                 <Phone className="w-5 h-5" />
                 <span className="font-medium">Contact Us</span>
               </Link>
+              {session && (
+                <Button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    signOut()
+                  }}
+                  className="w-full btn-material flex items-center justify-center space-x-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign out</span>
+                </Button>
+              )}
             </div>
           </motion.div>
         )}

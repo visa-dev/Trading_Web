@@ -101,7 +101,7 @@ export function ReviewsCarousel({ reviews: propReviews }: ReviewsCarouselProps) 
 
       if (response.ok) {
         const data = await response.json()
-        toast.success("Review submitted successfully! It will be visible after approval.")
+        toast.success("Your review will be added shortly.")
         setIsDialogOpen(false)
         setComment("")
         setRating(5)

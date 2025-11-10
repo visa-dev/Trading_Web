@@ -31,6 +31,7 @@ async function main() {
       username: 'lead-trader',
       role: 'TRADER',
       passwordHash: adminPasswordHash,
+      bio: 'Lead trader and administrator focused on disciplined, signal-driven performance.',
     },
   })
 

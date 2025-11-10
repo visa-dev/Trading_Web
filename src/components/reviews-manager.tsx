@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, MessageSquare, Check, X, Award } from "lucide-react"
+import { Star, MessageSquare, Check, X, Award, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 
 interface Review {
   id: string
@@ -47,6 +48,14 @@ export function ReviewsManager() {
   const [traderReviewsLoading, setTraderReviewsLoading] = useState(true)
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "APPROVED" | "REJECTED">("PENDING")
   const [activeTab, setActiveTab] = useState<"posts" | "trader">("posts")
+  const [pendingAction, setPendingAction] = useState<{
+    scope: "review" | "trader"
+    id: string
+    nextStatus: "APPROVED" | "REJECTED"
+    subject: string
+    actor: string
+  } | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     fetchReviews()
@@ -81,45 +90,66 @@ export function ReviewsManager() {
     }
   }
 
-  const handleReviewStatus = async (reviewId: string, status: "APPROVED" | "REJECTED") => {
-    try {
-      const response = await fetch(`/api/reviews/${reviewId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      })
-
-      if (response.ok) {
-        toast.success(`Review ${status.toLowerCase()} successfully`)
-        fetchReviews()
-      } else {
-        toast.error('Failed to update review status')
-      }
-    } catch (error) {
-      toast.error('An error occurred')
-    }
+  const requestReviewStatus = (review: Review, status: "APPROVED" | "REJECTED") => {
+    setPendingAction({
+      scope: "review",
+      id: review.id,
+      nextStatus: status,
+      subject: review.post?.title || review.video?.title || "this submission",
+      actor: review.user.username,
+    })
   }
 
-  const handleTraderReviewStatus = async (reviewId: string, status: "APPROVED" | "REJECTED") => {
-    try {
-      const response = await fetch(`/api/trader-reviews/${reviewId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      })
+  const requestTraderReviewStatus = (review: TraderReview, status: "APPROVED" | "REJECTED") => {
+    setPendingAction({
+      scope: "trader",
+      id: review.id,
+      nextStatus: status,
+      subject: "trader profile",
+      actor: review.user.username,
+    })
+  }
 
-      if (response.ok) {
-        toast.success(`Trader review ${status.toLowerCase()} successfully`)
-        fetchTraderReviews()
+  const executePendingAction = async () => {
+    if (!pendingAction) return
+    setActionLoading(true)
+    try {
+      if (pendingAction.scope === "review") {
+        const response = await fetch(`/api/reviews/${pendingAction.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: pendingAction.nextStatus }),
+        })
+
+        if (response.ok) {
+          toast.success(`Review ${pendingAction.nextStatus.toLowerCase()} successfully`)
+          fetchReviews()
+        } else {
+          toast.error("Failed to update review status")
+        }
       } else {
-        toast.error('Failed to update trader review status')
+        const response = await fetch(`/api/trader-reviews/${pendingAction.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: pendingAction.nextStatus }),
+        })
+
+        if (response.ok) {
+          toast.success(`Trader review ${pendingAction.nextStatus.toLowerCase()} successfully`)
+          fetchTraderReviews()
+        } else {
+          toast.error("Failed to update trader review status")
+        }
       }
     } catch (error) {
-      toast.error('An error occurred')
+      toast.error("An error occurred")
+    } finally {
+      setActionLoading(false)
+      setPendingAction(null)
     }
   }
 
@@ -194,19 +224,39 @@ export function ReviewsManager() {
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => handleReviewStatus(review.id, "APPROVED")}
-                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => requestReviewStatus(review, "APPROVED")}
+                            disabled={actionLoading && pendingAction?.id === review.id}
+                            className="bg-green-600 hover:bg-green-700 disabled:bg-green-500/70"
                           >
-                            <Check className="w-3 h-3 mr-1" />
-                            Approve
+                            {actionLoading && pendingAction?.id === review.id && pendingAction?.nextStatus === "APPROVED" ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <Check className="w-3 h-3 mr-1" />
+                                Approve
+                              </>
+                            )}
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleReviewStatus(review.id, "REJECTED")}
+                            onClick={() => requestReviewStatus(review, "REJECTED")}
+                            disabled={actionLoading && pendingAction?.id === review.id}
                           >
-                            <X className="w-3 h-3 mr-1" />
-                            Reject
+                            {actionLoading && pendingAction?.id === review.id && pendingAction?.nextStatus === "REJECTED" ? (
+                              <>
+                                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <X className="w-3 h-3 mr-1" />
+                                Reject
+                              </>
+                            )}
                           </Button>
                         </div>
                       )}
@@ -256,19 +306,39 @@ export function ReviewsManager() {
                 <div className="flex space-x-2">
                   <Button
                     size="sm"
-                    onClick={() => handleTraderReviewStatus(review.id, "APPROVED")}
-                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => requestTraderReviewStatus(review, "APPROVED")}
+                    disabled={actionLoading && pendingAction?.id === review.id}
+                    className="bg-green-600 hover:bg-green-700 disabled:bg-green-500/70"
                   >
-                    <Check className="w-3 h-3 mr-1" />
-                    Approve
+                    {actionLoading && pendingAction?.id === review.id && pendingAction?.nextStatus === "APPROVED" ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3 h-3 mr-1" />
+                        Approve
+                      </>
+                    )}
                   </Button>
                   <Button
                     size="sm"
                     variant="destructive"
-                    onClick={() => handleTraderReviewStatus(review.id, "REJECTED")}
+                    onClick={() => requestTraderReviewStatus(review, "REJECTED")}
+                    disabled={actionLoading && pendingAction?.id === review.id}
                   >
-                    <X className="w-3 h-3 mr-1" />
-                    Reject
+                    {actionLoading && pendingAction?.id === review.id && pendingAction?.nextStatus === "REJECTED" ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <X className="w-3 h-3 mr-1" />
+                        Reject
+                      </>
+                    )}
                   </Button>
                 </div>
               )}
@@ -368,6 +438,28 @@ export function ReviewsManager() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={!!pendingAction}
+        title={
+          pendingAction?.nextStatus === "APPROVED"
+            ? "Approve Review"
+            : "Reject Review"
+        }
+        description={
+          pendingAction
+            ? `Are you sure you want to ${pendingAction.nextStatus.toLowerCase()} the review from ${pendingAction.actor} for ${pendingAction.subject}?`
+            : ""
+        }
+        confirmLabel={pendingAction?.nextStatus === "APPROVED" ? "Approve" : "Reject"}
+        onCancel={() => {
+          if (!actionLoading) setPendingAction(null)
+        }}
+        onConfirm={executePendingAction}
+        isLoading={actionLoading}
+      />
     </div>
   )
 }
+
+export default ReviewsManager

@@ -43,6 +43,7 @@ model User {
   username      String    @unique
   role          UserRole  @default(USER)
   image         String?
+  bio           String?
   passwordHash  String?
   createdAt     DateTime  @default(now())
   
@@ -68,6 +69,7 @@ model PerformancePost {
   id           String    @id @default(cuid())
   title        String
   description  String?
+  type         PerformancePostType @default(PERFORMANCE)
   profitLoss   Float?
   winRate      Float?
   drawdown     Float?
@@ -160,4 +162,9 @@ enum ReviewStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum PerformancePostType {
+  PERFORMANCE
+  ANALYTICS
 }

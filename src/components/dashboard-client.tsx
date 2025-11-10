@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { Session } from "next-auth"
-import { DashboardOverview } from "@/components/dashboard-overview"
+import { DashboardOverview, DashboardStats, DashboardActivityItem } from "@/components/dashboard-overview"
 import { PerformancePostsManager } from "@/components/performance-posts-manager"
 import { VideoManager } from "@/components/video-manager"
 import { ReviewsManager } from "@/components/reviews-manager"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart3, FileText, MessageSquare, Star, Video, TrendingUp, Users, DollarSign, Settings, Bell } from "lucide-react"
+import { BarChart3, FileText, MessageSquare, Star, Video, TrendingUp, Users, Settings, Bell, AlertTriangle } from "lucide-react"
 import { motion } from "framer-motion"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { Card, CardContent } from "@/components/ui/card"
@@ -23,41 +23,54 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ session }: DashboardClientProps) {
-  const [dashboardStats, setDashboardStats] = useState({
-    totalPosts: 0,
-    totalViews: 0,
-    totalRevenue: 0,
-    activeUsers: 0,
-    avgRating: 0,
-    totalMessages: 0,
-  })
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null)
+  const [recentActivity, setRecentActivity] = useState<DashboardActivityItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showMessagesModal, setShowMessagesModal] = useState(false)
   const [showNewPostModal, setShowNewPostModal] = useState(false)
   const [showAddVideoModal, setShowAddVideoModal] = useState(false)
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
 
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState("overview")
+  const notificationsRef = useRef<HTMLDivElement | null>(null)
+
+  const fetchDashboardStats = useCallback(async () => {
+    try {
+      const response = await fetch("/api/dashboard/stats")
+      if (!response.ok) {
+        throw new Error("Failed to load dashboard stats")
+      }
+      const data = await response.json()
+      setDashboardStats(data.stats)
+      setRecentActivity(Array.isArray(data.activity) ? data.activity : [])
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error)
+      setError("Unable to load dashboard statistics right now. Please try again shortly.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        setDashboardStats({
-          totalPosts: 12,
-          totalViews: 2847,
-          totalRevenue: 15750,
-          activeUsers: 156,
-          avgRating: 4.8,
-          totalMessages: 23,
-        })
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error)
-      } finally {
-        setLoading(false)
+    fetchDashboardStats()
+    const interval = setInterval(fetchDashboardStats, 15000)
+    return () => clearInterval(interval)
+  }, [fetchDashboardStats])
+
+  useEffect(() => {
+    if (!notificationsOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false)
       }
     }
 
-    fetchDashboardStats()
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [notificationsOpen])
 
   if (loading) {
     return (
@@ -67,60 +80,82 @@ export function DashboardClient({ session }: DashboardClientProps) {
     )
   }
 
+  if (error || !dashboardStats) {
+    return (
+      <div className="min-h-screen hero-bg flex items-center justify-center px-4">
+        <Card className="card-material max-w-lg w-full">
+          <CardContent className="p-10 text-center space-y-4">
+            <AlertTriangle className="w-10 h-10 mx-auto text-yellow-400" />
+            <h2 className="text-xl font-semibold text-white">Dashboard data unavailable</h2>
+            <p className="text-sm text-gray-400">
+              {error ?? "We couldn’t retrieve the latest statistics."} Please refresh the page or try again later.
+            </p>
+            <Button className="btn-material mt-4" onClick={() => window.location.reload()}>
+              Reload Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const notificationBadgeCount =
+    (dashboardStats.pendingReviews ?? 0) + (dashboardStats.unreadMessages ?? 0)
+
   const stats = [
     {
       icon: BarChart3,
       label: "Total Posts",
       value: dashboardStats.totalPosts,
-      change: "+2 this week",
+      change: `${dashboardStats.publishedPosts} published`,
       color: "from-blue-500/10 to-cyan-500/10",
       iconColor: "text-blue-400",
       borderColor: "border-blue-500/20",
     },
     {
       icon: TrendingUp,
-      label: "Total Views",
-      value: dashboardStats.totalViews.toLocaleString(),
-      change: "+12% from last month",
+      label: "Performance Posts",
+      value: dashboardStats.performancePosts,
+      change: `${dashboardStats.analyticsPosts} analytics posts`,
       color: "from-green-500/10 to-emerald-500/10",
       iconColor: "text-green-400",
       borderColor: "border-green-500/20",
     },
     {
-      icon: DollarSign,
-      label: "Revenue",
-      value: `$${dashboardStats.totalRevenue.toLocaleString()}`,
-      change: "+8% this quarter",
-      color: "from-yellow-500/10 to-orange-500/10",
-      iconColor: "text-yellow-400",
-      borderColor: "border-yellow-500/20",
-    },
-    {
       icon: Users,
-      label: "Active Users",
-      value: dashboardStats.activeUsers,
-      change: "+5 new this week",
+      label: "Total Reviews",
+      value: dashboardStats.totalReviews,
+      change: `${dashboardStats.pendingReviews} pending approval`,
       color: "from-purple-500/10 to-pink-500/10",
       iconColor: "text-purple-400",
       borderColor: "border-purple-500/20",
     },
     {
       icon: Star,
-      label: "Avg Rating",
-      value: dashboardStats.avgRating.toFixed(1),
-      change: "Based on 89 reviews",
+      label: "Average Rating",
+      value: dashboardStats.averageRating.toFixed(1),
+      change: "Across all approved reviews",
       color: "from-orange-500/10 to-red-500/10",
       iconColor: "text-orange-400",
       borderColor: "border-orange-500/20",
     },
     {
-      icon: MessageSquare,
-      label: "Messages",
-      value: dashboardStats.totalMessages,
-      change: "3 unread",
+      icon: Video,
+      label: "Education Videos",
+      value: dashboardStats.totalVideos,
+      change: `${dashboardStats.averageWinRate.toFixed(1)}% avg win rate`,
       color: "from-indigo-500/10 to-blue-500/10",
       iconColor: "text-indigo-400",
       borderColor: "border-indigo-500/20",
+    },
+    {
+      icon: MessageSquare,
+      label: "Unread Messages",
+      value: dashboardStats.unreadMessages,
+      change: `${dashboardStats.totalConversations} total conversations`,
+      color: "from-teal-500/10 to-cyan-500/10",
+      iconColor: "text-teal-300",
+      borderColor: "border-teal-500/20",
     },
   ]
 
@@ -141,15 +176,79 @@ export function DashboardClient({ session }: DashboardClientProps) {
               </h1>
               <p className="text-xl text-gray-300">Manage your trading performance and user interactions</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Button className="btn-material">
-                <Bell className="w-4 h-4 mr-2" />
-                Notifications
-              </Button>
-              <Button className="btn-material">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
+            <div className="flex items-center">
+              <div className="relative" ref={notificationsRef}>
+                <Button
+                  className="btn-material relative"
+                  onClick={() => setNotificationsOpen((prev) => !prev)}
+                  aria-expanded={notificationsOpen}
+                  aria-haspopup="true"
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Notifications
+                  {notificationBadgeCount > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center min-w-[1.5rem] h-6 px-2 rounded-full bg-red-500 text-white text-xs font-semibold">
+                      {notificationBadgeCount > 99 ? "99+" : notificationBadgeCount}
+                    </span>
+                  )}
+                </Button>
+
+                {notificationsOpen && (
+                  <motion.div
+                    className="absolute right-0 mt-3 w-72 rounded-2xl border border-gray-700 bg-gray-900/95 shadow-2xl backdrop-blur z-20"
+                    initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                  >
+                    <div className="px-4 py-3 border-b border-gray-800 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-white">Notifications</p>
+                      <span className="text-xs text-gray-400">
+                        {notificationBadgeCount > 0 ? "Action required" : "All caught up"}
+                      </span>
+                    </div>
+                    <div className="p-3 space-y-3">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-800/80 bg-gray-800/40 px-3 py-3">
+                        <div>
+                          <p className="text-sm font-medium text-white">Pending reviews</p>
+                          <p className="text-xs text-gray-400">
+                            Posts & trader feedback awaiting approval
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-700 text-yellow-400 hover:bg-yellow-500/10"
+                          onClick={() => {
+                            setActiveTab("reviews")
+                            setNotificationsOpen(false)
+                          }}
+                        >
+                          {dashboardStats.pendingReviews}
+                        </Button>
+                      </div>
+                      <div className="flex items-center justify-between rounded-lg border border-gray-800/80 bg-gray-800/40 px-3 py-3">
+                        <div>
+                          <p className="text-sm font-medium text-white">Unread messages</p>
+                          <p className="text-xs text-gray-400">
+                            User conversations needing replies
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-700 text-yellow-400 hover:bg-yellow-500/10"
+                          onClick={() => {
+                            setActiveTab("messages")
+                            setNotificationsOpen(false)
+                          }}
+                        >
+                          {dashboardStats.unreadMessages}
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -191,7 +290,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
-          <Tabs defaultValue="overview" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5 bg-navy-800/50 border-navy-700">
               <TabsTrigger
                 value="overview"
@@ -231,7 +330,7 @@ export function DashboardClient({ session }: DashboardClientProps) {
             </TabsList>
 
             <TabsContent value="overview" className="mt-6">
-              <DashboardOverview />
+              <DashboardOverview stats={dashboardStats} activity={recentActivity} />
             </TabsContent>
 
             <TabsContent value="posts" className="mt-6">

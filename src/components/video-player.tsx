@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { FileText, BarChart3 } from "lucide-react"
+import { resolveVideoSource } from "@/lib/video-sources"
 
 interface TradingVideo {
   id: string
@@ -19,15 +20,10 @@ interface VideoPlayerProps {
 }
 
 export function VideoPlayer({ video, activeTab }: VideoPlayerProps) {
-  // Extract YouTube video ID from URL
-  const getYouTubeVideoId = (url: string) => {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-    const match = url.match(regex)
-    return match ? match[1] : null
-  }
-
-  const videoId = getYouTubeVideoId(video.youtubeUrl)
-  const embedUrl = videoId ? `https://www.youtube.com/embed/${videoId}` : null
+  const videoSource = resolveVideoSource(video.youtubeUrl)
+  const allowAttributes = videoSource?.type === "YOUTUBE"
+    ? "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    : "autoplay; picture-in-picture; fullscreen"
 
   return (
     <Card className="bg-gray-800/50 border-gray-700">
@@ -46,22 +42,33 @@ export function VideoPlayer({ video, activeTab }: VideoPlayerProps) {
           </TabsList>
 
           <TabsContent value="video">
-            {embedUrl ? (
+            {videoSource ? (
               <div className="aspect-video">
-                <iframe
-                  src={embedUrl}
-                  title={video.title}
-                  className="w-full h-full rounded-lg"
-                  allowFullScreen
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  sandbox="allow-scripts allow-same-origin allow-presentation"
-                />
+                {videoSource.type === "FILE" ? (
+                  <video
+                    src={videoSource.embedUrl}
+                    className="w-full h-full rounded-lg bg-black"
+                    controls
+                    controlsList="nodownload"
+                    preload="metadata"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <iframe
+                    src={videoSource.embedUrl}
+                    title={video.title}
+                    className="w-full h-full rounded-lg"
+                    allow={allowAttributes}
+                    allowFullScreen
+                  />
+                )}
               </div>
             ) : (
               <div className="aspect-video bg-gray-700/50 rounded-lg flex items-center justify-center">
                 <div className="text-center text-gray-400">
-                  <p>Invalid YouTube URL</p>
-                  <p className="text-sm">Please check the video link</p>
+                  <p>Unable to load this video.</p>
+                  <p className="text-sm">Please verify the video link or try again later.</p>
                 </div>
               </div>
             )}

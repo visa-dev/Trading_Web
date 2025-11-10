@@ -59,7 +59,7 @@ export function ReviewsSection({ reviews, postId, type }: ReviewsSectionProps) {
       })
 
       if (response.ok) {
-        toast.success("Review submitted successfully!")
+        toast.success("Your review will be added shortly.")
         setComment("")
         setRating(5)
         // Refresh the page to show the new review

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Sahan Akalanka - Trading Performance Showcase",
-  description: "Professional trading performance tracking and analysis platform with AI-powered insights",
+  description: "Professional trading performance tracking and analysis platform with signal-driven insights",
 }
 
 export default function RootLayout({

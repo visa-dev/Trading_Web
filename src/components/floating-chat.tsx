@@ -1,13 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import { motion, AnimatePresence } from "framer-motion"
-import { MessageCircle, X, Send, User, Bot, LogIn } from "lucide-react"
+import { MessageCircle, X, Send, Bot, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import Link from "next/link"
-import { toast } from "sonner"
 import { addCacheBusting } from "@/lib/chat-utils"
 
 interface Message {
@@ -24,13 +22,18 @@ interface Message {
 
 export function FloatingChat() {
   const { data: session } = useSession()
+  const sessionRole = (session?.user as { role?: string } | undefined)?.role ?? null
+  const sessionUserId = (session?.user as { id?: string } | undefined)?.id ?? null
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  const viewerIsTrader = useMemo(() => sessionRole === "TRADER", [sessionRole])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -55,18 +58,24 @@ export function FloatingChat() {
             image: string | null
             role: "USER" | "TRADER"
           }
-        }) => ({
-          id: msg.id,
-          content: msg.content,
-          senderId: msg.senderId,
-          timestamp: new Date(msg.createdAt),
-          sender: {
-            username: msg.sender.username,
-            image: msg.sender.image,
-            role: msg.sender.role
+        }) => {
+          const isTrader = msg.sender.role === "TRADER"
+          return {
+            id: msg.id,
+            content: msg.content,
+            senderId: msg.senderId,
+            timestamp: new Date(msg.createdAt),
+            sender: {
+              username: isTrader ? "Signal Expert" : msg.sender.username,
+              image: msg.sender.image,
+              role: msg.sender.role
+            }
           }
-        }))
+        })
         setMessages(formattedMessages)
+        if (viewerIsTrader) {
+          setUnreadCount(0)
+        }
       }
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -89,6 +98,51 @@ export function FloatingChat() {
     }
   }, [isOpen, conversationId, session, fetchMessages])
 
+  useEffect(() => {
+    if (!session || !sessionUserId) return
+
+    let isMounted = true
+
+    const pollConversation = async () => {
+      try {
+        const response = await fetch(addCacheBusting('/api/conversations'))
+        if (!response.ok) return
+        const data = await response.json()
+        const conversations: Array<any> = Array.isArray(data.conversations) ? data.conversations : []
+        const conversation = conversations.find((conv) => conv.userId === sessionUserId || conv.traderId === sessionUserId)
+
+        if (!conversation) {
+          if (isMounted) {
+            setConversationId(null)
+            setUnreadCount(0)
+          }
+          return
+        }
+
+        if (isMounted) {
+          setConversationId(conversation.id)
+          if (viewerIsTrader) {
+            setUnreadCount(conversation.unreadCount ?? 0)
+          }
+        }
+      } catch (error) {
+        console.error("Error polling conversation:", error)
+      }
+    }
+
+    pollConversation()
+    const interval = setInterval(() => {
+      if (!isOpen) {
+        pollConversation()
+      }
+    }, 15000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [session, sessionUserId, viewerIsTrader, isOpen])
+
   const initializeConversation = async () => {
     try {
       setLoading(true)
@@ -109,11 +163,11 @@ export function FloatingChat() {
         if (data.message === "Conversation created") {
           const welcomeMessage: Message = {
             id: "welcome",
-            content: "Welcome to Sahan Akalanka's trading chat! How can I help you today?",
+            content: "Welcome to the Signal Expert trading assistant! How can I support you today?",
             senderId: "trader",
             timestamp: new Date(),
             sender: {
-              username: "Sahan Akalanka",
+              username: "Signal Expert",
               image: null,
               role: "TRADER"
             }
@@ -247,6 +301,17 @@ export function FloatingChat() {
                 </motion.div>
               )}
             </AnimatePresence>
+            {viewerIsTrader && unreadCount > 0 && !isOpen && (
+              <motion.span
+                key="chat-badge"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 0 }}
+                className="absolute -top-1.5 -right-1.5 min-w-[1.6rem] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shadow-lg"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </motion.span>
+            )}
           </Button>
         </motion.div>
 
@@ -281,8 +346,8 @@ export function FloatingChat() {
                     <Bot className="w-5 h-5 text-yellow-600" />
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">Sahan Akalanka</h3>
-                    <p className="text-xs text-yellow-100">Online</p>
+                    <h3 className="text-white font-semibold">Signal Expert</h3>
+                    <p className="text-xs text-yellow-100">Virtual Trading Assistant</p>
                   </div>
                 </div>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />

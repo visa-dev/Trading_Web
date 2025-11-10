@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { BarChart3, Mail, Phone, MapPin, Facebook, ArrowUp } from "lucide-react"
+import { BarChart3, Mail, Phone, Facebook, ArrowUp } from "lucide-react"
 import { FaTiktok } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 
@@ -60,7 +60,7 @@ export function Footer() {
               </div>
               
               <p className="text-gray-400 mb-6 leading-relaxed">
-                Professional trading performance tracking and analysis platform with AI-powered insights for the modern investor.
+                Professional trading performance tracking and analysis platform with signal-driven insights for the modern investor.
               </p>
 
               <div className="space-y-3">
@@ -71,10 +71,6 @@ export function Footer() {
                 <div className="flex items-center text-gray-400">
                   <Phone className="w-4 h-4 mr-3 text-yellow-400" />
                   <span>+94 77 638 7655</span>
-                </div>
-                <div className="flex items-center text-gray-400">
-                  <MapPin className="w-4 h-4 mr-3 text-yellow-400" />
-                  <span>Dubai, UAE</span>
                 </div>
               </div>
             </motion.div>

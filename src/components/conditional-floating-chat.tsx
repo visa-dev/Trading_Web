@@ -5,11 +5,14 @@ import { FloatingChat } from "./floating-chat"
 
 export function ConditionalFloatingChat() {
   const { data: session } = useSession()
-  
-  // Only show floating chat for users, not traders
-  if (session?.user?.role === "TRADER") {
+
+  if (!session?.user) {
     return null
   }
-  
+
+  if (session.user.role === "TRADER") {
+    return null
+  }
+
   return <FloatingChat />
 }

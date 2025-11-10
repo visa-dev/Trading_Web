@@ -50,6 +50,29 @@ export async function GET(
       }
     })
 
+    const viewerIsUser = session.user.id === conversation.userId
+    const viewerIsTrader = session.user.id === conversation.traderId
+
+    if (viewerIsTrader) {
+      await prisma.message.updateMany({
+        where: {
+          conversationId,
+          senderId: conversation.userId,
+          read: false,
+        },
+        data: {
+          read: true,
+        },
+      })
+
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          unreadCount: 0,
+        },
+      })
+    }
+
     return NextResponse.json({ messages })
   } catch (error) {
     console.error("Error fetching messages:", error)
@@ -111,6 +134,8 @@ export async function POST(
     })
 
     // Update conversation with last message and unread count
+    const senderIsUser = session.user.id === conversation.userId
+
     await prisma.conversation.update({
       where: {
         id: conversationId
@@ -118,9 +143,7 @@ export async function POST(
       data: {
         lastMessage: content.trim(),
         updatedAt: new Date(),
-        unreadCount: {
-          increment: session.user.id === conversation.userId ? 0 : 1
-        }
+        unreadCount: senderIsUser ? { increment: 1 } : { set: 0 },
       }
     })
 

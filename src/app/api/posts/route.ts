@@ -8,8 +8,9 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     const { searchParams } = new URL(request.url)
     const published = searchParams.get("published")
+    const typeParam = searchParams.get("type")
 
-    const where: { published?: boolean } = {}
+    const where: { published?: boolean; type?: "PERFORMANCE" | "ANALYTICS" } = {}
     
     // If user is not authenticated or not a trader, only show published posts
     if (!session?.user?.id || session.user.role !== "TRADER") {
@@ -17,6 +18,10 @@ export async function GET(request: NextRequest) {
     } else if (published !== null) {
       // If trader is requesting specific published status
       where.published = published === "true"
+    }
+
+    if (typeParam === "PERFORMANCE" || typeParam === "ANALYTICS") {
+      where.type = typeParam
     }
 
     const posts = await prisma.performancePost.findMany({
@@ -62,6 +67,7 @@ export async function POST(request: NextRequest) {
       imageUrl,
       videoUrl,
       published = false,
+      type: rawType = "PERFORMANCE",
     } = body ?? {}
 
     const normalizeOptionalString = (value: unknown) => {
@@ -85,29 +91,34 @@ export async function POST(request: NextRequest) {
       return numeric
     }
 
-    let normalizedProfitLoss: number | null
-    let normalizedWinRate: number | null
-    let normalizedDrawdown: number | null
-    let normalizedRiskReward: number | null
+    const normalizedType: "PERFORMANCE" | "ANALYTICS" =
+      rawType === "ANALYTICS" ? "ANALYTICS" : "PERFORMANCE"
 
-    try {
-      normalizedProfitLoss = parseOptionalNumber(profitLoss)
-      normalizedWinRate = parseOptionalNumber(winRate)
-      normalizedDrawdown = parseOptionalNumber(drawdown)
-      normalizedRiskReward = parseOptionalNumber(riskReward)
-    } catch {
-      return NextResponse.json({ error: "Invalid numeric values" }, { status: 400 })
+    let normalizedProfitLoss: number | null = null
+    let normalizedWinRate: number | null = null
+    let normalizedDrawdown: number | null = null
+    let normalizedRiskReward: number | null = null
+
+    if (normalizedType === "PERFORMANCE") {
+      try {
+        normalizedProfitLoss = parseOptionalNumber(profitLoss)
+        normalizedWinRate = parseOptionalNumber(winRate)
+        normalizedDrawdown = parseOptionalNumber(drawdown)
+        normalizedRiskReward = parseOptionalNumber(riskReward)
+      } catch {
+        return NextResponse.json({ error: "Invalid numeric values" }, { status: 400 })
+      }
     }
 
-    if (normalizedWinRate !== null && (normalizedWinRate < 0 || normalizedWinRate > 100)) {
+    if (normalizedType === "PERFORMANCE" && normalizedWinRate !== null && (normalizedWinRate < 0 || normalizedWinRate > 100)) {
       return NextResponse.json({ error: "Win rate must be between 0 and 100" }, { status: 400 })
     }
 
-    if (normalizedDrawdown !== null && (normalizedDrawdown < 0 || normalizedDrawdown > 100)) {
+    if (normalizedType === "PERFORMANCE" && normalizedDrawdown !== null && (normalizedDrawdown < 0 || normalizedDrawdown > 100)) {
       return NextResponse.json({ error: "Drawdown must be between 0 and 100" }, { status: 400 })
     }
 
-    if (normalizedRiskReward !== null && normalizedRiskReward < 0) {
+    if (normalizedType === "PERFORMANCE" && normalizedRiskReward !== null && normalizedRiskReward < 0) {
       return NextResponse.json({ error: "Risk/Reward must be zero or greater" }, { status: 400 })
     }
 
@@ -115,10 +126,11 @@ export async function POST(request: NextRequest) {
       data: {
         title: normalizedTitle,
         description: normalizeOptionalString(description),
-        profitLoss: normalizedProfitLoss,
-        winRate: normalizedWinRate,
-        drawdown: normalizedDrawdown,
-        riskReward: normalizedRiskReward,
+        type: normalizedType,
+        profitLoss: normalizedType === "PERFORMANCE" ? normalizedProfitLoss : null,
+        winRate: normalizedType === "PERFORMANCE" ? normalizedWinRate : null,
+        drawdown: normalizedType === "PERFORMANCE" ? normalizedDrawdown : null,
+        riskReward: normalizedType === "PERFORMANCE" ? normalizedRiskReward : null,
         imageUrl: normalizeOptionalString(imageUrl),
         videoUrl: normalizeOptionalString(videoUrl),
         published: Boolean(published),

@@ -13,6 +13,7 @@ import {
   scaleBounceVariants,
   floatVariants
 } from "@/lib/animations"
+import { SiFacebook, SiTelegram, SiTiktok } from "react-icons/si"
 
 import profile from '@/assets/profile.jpg'
 
@@ -28,6 +29,27 @@ export function Hero() {
     { icon: Calendar, text: "10+ Years Experience", color: "text-yellow-400" },
     { icon: Award, text: "Professional Trader", color: "text-blue-400" },
     { icon: Users, text: "500+ Clients Served", color: "text-purple-400" }
+  ]
+
+  const socialLinks = [
+    {
+      href: "https://www.facebook.com/share/1CuHaE3Twp/",
+      label: "Facebook",
+      icon: SiFacebook,
+      gradient: "from-blue-500/20 to-sky-500/20"
+    },
+    {
+      href: "https://t.me/sahanakalanka",
+      label: "Telegram",
+      icon: SiTelegram,
+      gradient: "from-cyan-500/20 to-blue-500/20"
+    },
+    {
+      href: "https://www.tiktok.com/@sahan_akalanka",
+      label: "TikTok",
+      icon: SiTiktok,
+      gradient: "from-pink-500/20 to-purple-500/20"
+    },
   ]
 
   return (
@@ -125,7 +147,7 @@ export function Hero() {
                   transition={{ duration: 3, repeat: Infinity }}
                 >
                   <Award className="w-4 h-4 inline mr-1" />
-                  AI Expert
+                  Signal Expert
                 </motion.div>
               </div>
             </motion.div>
@@ -140,7 +162,7 @@ export function Hero() {
                   Sahan Akalanka
                 </h2>
                 <p className="text-xl text-yellow-400 dark:text-yellow-400 light:text-yellow-600 font-medium">
-                  Professional Trading Expert & AI Analyst
+                  Professional Trading Expert & Market Analyst
                 </p>
               </motion.div>
 
@@ -168,7 +190,7 @@ export function Hero() {
                 className="text-lg text-gray-300 dark:text-gray-300 light:text-navy-700 leading-relaxed"
                 variants={itemVariants}
               >
-                Specialized in Gold & Forex markets with a proven track record of delivering consistent returns through advanced AI-powered trading strategies and institutional-grade risk management.
+                Specialized in Gold & Forex markets with a proven track record of delivering consistent returns through advanced signal-based trading strategies and institutional-grade risk management.
               </motion.p>
             </motion.div>
           </motion.div>
@@ -200,7 +222,7 @@ export function Hero() {
               </h1>
               
               <p className="text-xl text-gray-300 dark:text-gray-300 light:text-navy-700 max-w-lg mx-auto lg:mx-0">
-                Real-time performance metrics from advanced AI-driven trading algorithms
+                Real-time performance metrics from advanced signal-driven trading algorithms
               </p>
             </motion.div>
 
@@ -257,26 +279,26 @@ export function Hero() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Button asChild size="lg" className="btn-material text-lg px-8 py-4">
-                  <Link href="/posts" className="flex items-center">
+                  <Link href="/account-management" className="flex items-center">
                     <Rocket className="w-5 h-5 mr-2" />
-                    View Performance
+                    Account Management
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Link>
                 </Button>
               </motion.div>
               
               <motion.div
-                variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button asChild size="lg" variant="outline" className="btn-material-outline text-lg px-8 py-4">
-                  <Link href="/auth/signin" className="flex items-center">
-                    <Zap className="w-5 h-5 mr-2" />
-                    Start Trading
-                  </Link>
-                </Button>
-              </motion.div>
+              variants={itemVariants}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button asChild size="lg" variant="outline" className="btn-material-outline text-lg px-8 py-4">
+                <Link href="/copy-trading" className="flex items-center">
+                  <Zap className="w-5 h-5 mr-2" />
+                  Copy Trading
+                </Link>
+              </Button>
+            </motion.div>
             </motion.div>
           </motion.div>
         </div>
@@ -301,6 +323,30 @@ export function Hero() {
             className="w-1 h-3 bg-gradient-to-b from-yellow-400 to-orange-400 rounded-full mt-2"
           />
         </motion.div>
+      </motion.div>
+
+      {/* Floating Social Links */}
+      <motion.div
+        className="hidden xl:flex flex-col gap-4 absolute top-32 right-10 z-30"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
+      >
+        {socialLinks.map((social, index) => (
+          <motion.a
+            key={social.href}
+            href={social.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.1, x: -8 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className={`p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-400/60 backdrop-blur-sm shadow-lg group transition-colors duration-300 bg-gradient-to-br ${social.gradient}`}
+            aria-label={social.label}
+          >
+            <social.icon className="w-5 h-5 text-gray-200 group-hover:text-white transition-colors duration-300" />
+          </motion.a>
+        ))}
       </motion.div>
     </motion.div>
   )

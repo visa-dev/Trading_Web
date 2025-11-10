@@ -33,6 +33,7 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
   const { data: session } = useSession()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
+  const sessionUserRole = (session?.user as { role?: string } | undefined)?.role
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -119,14 +120,14 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
             <MessageSquare className="w-5 h-5" />
             <span>Conversations</span>
           </div>
-          {session?.user?.role === "USER" && (
+          {sessionUserRole === "USER" && (
             <Button size="sm" onClick={startNewConversation} className="btn-material">
               <Plus className="w-4 h-4" />
             </Button>
           )}
         </CardTitle>
         <CardDescription className="text-gray-300">
-          {session?.user?.role === "TRADER" 
+          {sessionUserRole === "TRADER" 
             ? "Manage user conversations" 
             : "Start a conversation with the trader"
           }
@@ -138,7 +139,7 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
           <div className="p-6 text-center text-gray-300">
             <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p>No conversations yet</p>
-            {session?.user?.role === "USER" && (
+            {sessionUserRole === "USER" && (
               <Button 
                 onClick={startNewConversation}
                 className="mt-4 btn-material"
@@ -150,9 +151,13 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
         ) : (
           <div className="space-y-1">
             {conversations.map((conversation) => {
-              const otherUser = session?.user?.role === "TRADER" 
+              const viewingAsTrader = sessionUserRole === "TRADER"
+              const otherUser = viewingAsTrader 
                 ? conversation.user 
                 : conversation.trader
+              const displayName = viewingAsTrader
+                ? (otherUser?.username || "User")
+                : "Signal Expert"
 
               return (
                 <div
@@ -168,14 +173,14 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={otherUser?.image || ""} />
                       <AvatarFallback>
-                        {otherUser?.username?.charAt(0).toUpperCase() || "U"}
+                        {displayName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-white truncate">
-                          {otherUser?.username || "Unknown User"}
+                          {displayName}
                         </p>
                         {/* Unread count badge hidden */}
                       </div>
