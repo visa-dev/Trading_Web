@@ -32,6 +32,12 @@ export function FloatingChat() {
   const [loading, setLoading] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const lastSeenMessageIdRef = useRef<string | null>(null)
+  const [hasIncomingTraderMessage, setHasIncomingTraderMessage] = useState(false)
+  const latestMessageMetaRef = useRef<{
+    id: string | null
+    senderRole: "USER" | "TRADER" | null
+  }>({ id: null, senderRole: null })
 
   const viewerIsTrader = useMemo(() => sessionRole === "TRADER", [sessionRole])
 
@@ -39,13 +45,19 @@ export function FloatingChat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
-  const fetchMessages = useCallback(async (convId?: string) => {
-    const id = convId || conversationId
-    if (!id) return
+  const fetchMessages = useCallback(
+    async (convId?: string, options?: { showLoading?: boolean }) => {
+      const id = convId || conversationId
+      if (!id) return
+      const showLoading = options?.showLoading ?? false
 
-    try {
-      const response = await fetch(addCacheBusting(`/api/conversations/${id}/messages`))
-      if (response.ok) {
+      try {
+        if (showLoading) {
+          setLoading(true)
+        }
+
+        const response = await fetch(addCacheBusting(`/api/conversations/${id}/messages`))
+        if (response.ok) {
         const data = await response.json()
         // Convert API response to expected format
         const formattedMessages = (data.messages || []).map((msg: {
@@ -73,16 +85,33 @@ export function FloatingChat() {
           }
         })
         setMessages(formattedMessages)
+        if (formattedMessages.length > 0) {
+          const lastMessage = formattedMessages[formattedMessages.length - 1]
+          latestMessageMetaRef.current = {
+            id: lastMessage.id,
+            senderRole: lastMessage.sender.role,
+          }
+          if (!viewerIsTrader) {
+            lastSeenMessageIdRef.current = lastMessage.id
+            if (lastMessage.sender.role === "TRADER") {
+              setHasIncomingTraderMessage(false)
+            }
+          }
+        }
         if (viewerIsTrader) {
           setUnreadCount(0)
         }
+        }
+      } catch (error) {
+        console.error('Error fetching messages:', error)
+      } finally {
+        if (showLoading) {
+          setLoading(false)
+        }
       }
-    } catch (error) {
-      console.error('Error fetching messages:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [conversationId])
+    },
+    [conversationId, viewerIsTrader]
+  )
 
   // Initialize conversation when chat opens
   useEffect(() => {
@@ -91,61 +120,8 @@ export function FloatingChat() {
     }
   }, [isOpen, session, conversationId])
 
-  // Fetch messages once when chat opens and conversation is ready
-  useEffect(() => {
-    if (isOpen && conversationId && session) {
-      fetchMessages()
-    }
-  }, [isOpen, conversationId, session, fetchMessages])
-
-  useEffect(() => {
-    if (!session || !sessionUserId) return
-
-    let isMounted = true
-
-    const pollConversation = async () => {
-      try {
-        const response = await fetch(addCacheBusting('/api/conversations'))
-        if (!response.ok) return
-        const data = await response.json()
-        const conversations: Array<any> = Array.isArray(data.conversations) ? data.conversations : []
-        const conversation = conversations.find((conv) => conv.userId === sessionUserId || conv.traderId === sessionUserId)
-
-        if (!conversation) {
-          if (isMounted) {
-            setConversationId(null)
-            setUnreadCount(0)
-          }
-          return
-        }
-
-        if (isMounted) {
-          setConversationId(conversation.id)
-          if (viewerIsTrader) {
-            setUnreadCount(conversation.unreadCount ?? 0)
-          }
-        }
-      } catch (error) {
-        console.error("Error polling conversation:", error)
-      }
-    }
-
-    pollConversation()
-    const interval = setInterval(() => {
-      if (!isOpen) {
-        pollConversation()
-      }
-    }, 15000)
-
-    return () => {
-      isMounted = false
-      clearInterval(interval)
-    }
-  }, [session, sessionUserId, viewerIsTrader, isOpen])
-
   const initializeConversation = async () => {
     try {
-      setLoading(true)
       // Get or create conversation with trader
       const response = await fetch('/api/conversations', {
         method: 'POST',
@@ -157,7 +133,8 @@ export function FloatingChat() {
       
       if (response.ok) {
         const data = await response.json()
-        setConversationId(data.conversation.id)
+        const newConversationId = data.conversation.id
+        setConversationId(newConversationId)
         
         // Add welcome message if it's a new conversation
         if (data.message === "Conversation created") {
@@ -174,13 +151,11 @@ export function FloatingChat() {
           }
           setMessages([welcomeMessage])
         } else {
-          await fetchMessages(data.conversation.id)
+          await fetchMessages(newConversationId, { showLoading: true })
         }
       }
     } catch (error) {
       console.error('Error initializing conversation:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -210,7 +185,7 @@ export function FloatingChat() {
 
       if (response.ok) {
         // Refresh messages to get the latest
-        await fetchMessages()
+        await fetchMessages(undefined, { showLoading: false })
       }
     } catch (error) {
       console.error('Error sending message:', error)
@@ -275,7 +250,18 @@ export function FloatingChat() {
         >
           <Button
             data-chat-trigger
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              setIsOpen(!isOpen)
+              if (!isOpen) {
+                setHasIncomingTraderMessage(false)
+                if (!viewerIsTrader && latestMessageMetaRef.current.senderRole === "TRADER") {
+                  lastSeenMessageIdRef.current = latestMessageMetaRef.current.id
+                }
+                if (conversationId) {
+                  fetchMessages(conversationId, { showLoading: true })
+                }
+              }
+            }}
             className="w-14 h-14 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 shadow-lg hover:shadow-xl transition-all duration-300 relative"
           >
             <AnimatePresence mode="wait">
@@ -301,7 +287,7 @@ export function FloatingChat() {
                 </motion.div>
               )}
             </AnimatePresence>
-            {viewerIsTrader && unreadCount > 0 && !isOpen && (
+            {(viewerIsTrader && unreadCount > 0 && !isOpen) || (!viewerIsTrader && hasIncomingTraderMessage) ? (
               <motion.span
                 key="chat-badge"
                 initial={{ scale: 0 }}
@@ -309,9 +295,9 @@ export function FloatingChat() {
                 exit={{ scale: 0 }}
                 className="absolute -top-1.5 -right-1.5 min-w-[1.6rem] h-6 px-1 rounded-full bg-red-500 text-white text-xs font-semibold flex items-center justify-center shadow-lg"
               >
-                {unreadCount > 99 ? "99+" : unreadCount}
+                {viewerIsTrader ? (unreadCount > 99 ? "99+" : unreadCount) : "+1"}
               </motion.span>
-            )}
+            ) : null}
           </Button>
         </motion.div>
 

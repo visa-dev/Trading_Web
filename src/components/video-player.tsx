@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { FileText, BarChart3 } from "lucide-react"
+import { FileText } from "lucide-react"
 import { resolveVideoSource } from "@/lib/video-sources"
 
 interface TradingVideo {
@@ -10,7 +10,6 @@ interface TradingVideo {
   title: string
   youtubeUrl: string
   description: string
-  performanceMetrics?: Record<string, unknown> | string
   createdAt: Date | string
 }
 
@@ -81,27 +80,6 @@ export function VideoPlayer({ video, activeTab }: VideoPlayerProps) {
                 {video.description}
               </p>
             </div>
-
-            {video.performanceMetrics && (
-              <Card className="bg-gray-700/30 border-gray-600">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-white">
-                    <BarChart3 className="w-5 h-5" />
-                    <span>Performance Metrics</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="bg-gray-800/50 p-4 rounded-lg">
-                    <pre className="text-sm text-gray-300 whitespace-pre-wrap">
-                      {typeof video.performanceMetrics === 'string' 
-                        ? video.performanceMetrics 
-                        : JSON.stringify(video.performanceMetrics, null, 2)
-                      }
-                    </pre>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
 
             <Card className="bg-gray-700/30 border-gray-600">
               <CardHeader>

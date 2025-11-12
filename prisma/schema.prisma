@@ -87,7 +87,6 @@ model TradingVideo {
   title                String
   youtubeUrl           String
   description          String
-  performanceMetrics   Json?
   createdAt            DateTime  @default(now())
   
   reviews              Review[]

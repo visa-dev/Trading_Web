@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, youtubeUrl, description, performanceMetrics } = body
+    const { title, youtubeUrl, description } = body
 
     // Validate required fields
     if (!title || !youtubeUrl || !description) {
@@ -55,8 +55,7 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         youtubeUrl,
-        description,
-        performanceMetrics: performanceMetrics || null
+        description
       }
     })
 

@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
 
     // Get the first TRADER role user from the database
     const trader = await prisma.user.findFirst({
-      where: { role: 'TRADER' },
+      where: { role: "TRADER" },
+      select: { id: true },
     })
 
     if (!trader) {

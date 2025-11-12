@@ -39,7 +39,6 @@ interface TradingVideo {
   title: string
   youtubeUrl: string
   description: string
-  performanceMetrics?: Record<string, unknown>
   createdAt: string
 }
 
@@ -303,9 +302,9 @@ export default function Home() {
             >
               <div className="card-material p-12 max-w-md mx-auto">
                 <TrendingUp className="w-16 h-16 mx-auto mb-6 text-gray-400" />
-                <h3 className="text-xl font-bold text-white mb-4">No Performance Data Yet</h3>
+                <h3 className="text-xl font-bold text-white mb-4">No Performance Posts Yet</h3>
                 <p className="text-gray-300 mb-6">
-                  Our trading engine is analyzing market conditions. Check back soon for live trading results.
+                  Trading results will be published here once new performance posts go live. Check back soon for verified updates.
                 </p>
                 <Link 
                   href="/copy-trading"
