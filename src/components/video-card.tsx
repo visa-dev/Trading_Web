@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Play, Calendar, ArrowRight, Star } from "lucide-react"
+import { Play, Calendar, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { resolveVideoSource } from "@/lib/video-sources"
@@ -12,7 +12,6 @@ interface TradingVideo {
   title: string
   youtubeUrl: string
   description: string
-  performanceMetrics?: Record<string, unknown>
   createdAt: Date | string
 }
 
@@ -71,16 +70,6 @@ export function VideoCard({ video, onWatch }: VideoCardProps) {
             </motion.div>
           </div>
 
-          <motion.div
-            className="pointer-events-none absolute bottom-4 right-4"
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="bg-black/80 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-sm font-medium">
-              Trading Video
-            </div>
-          </motion.div>
         </motion.div>
       
         <CardHeader className="relative pb-4">
@@ -120,29 +109,6 @@ export function VideoCard({ video, onWatch }: VideoCardProps) {
               {video.description}
             </p>
           </motion.div>
-
-          {/* Performance metrics */}
-          {video.performanceMetrics && (
-            <motion.div 
-              className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 p-4 rounded-xl border border-blue-700/50"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <Star className="w-4 h-4 text-white" />
-                </div>
-                <div className="text-sm font-semibold text-blue-300">Performance Metrics</div>
-              </div>
-              <div className="text-xs text-gray-300 bg-gray-900/50 p-2 rounded-lg">
-                {typeof video.performanceMetrics === 'string' 
-                  ? video.performanceMetrics 
-                  : JSON.stringify(video.performanceMetrics, null, 2)
-                }
-              </div>
-            </motion.div>
-          )}
 
           {/* Action button */}
           <motion.div 

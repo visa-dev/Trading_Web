@@ -11,29 +11,69 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const conversations = await prisma.conversation.findMany({
+    const sessionRole = (session.user as { role?: string } | undefined)?.role ?? null
+    const isTrader = sessionRole === "TRADER"
+
+    const conversationsRaw = await prisma.conversation.findMany({
       where: {
-        OR: [
-          { userId: session.user.id },
-          { traderId: session.user.id }
-        ]
+        ...(isTrader
+          ? {
+              traderId: session.user.id,
+              messages: {
+                some: {},
+              },
+            }
+          : {
+              userId: session.user.id,
+            }),
       },
       include: {
         user: {
           select: {
             username: true,
             image: true,
-          }
+          },
         },
         trader: {
           select: {
             username: true,
             image: true,
-          }
-        }
+          },
+        },
+        messages: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            sender: {
+              select: {
+                role: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        updatedAt: 'desc'
+        updatedAt: "desc",
+      },
+    })
+
+    const conversations = conversationsRaw.map((conversation) => {
+      const [lastMessageRecord] = conversation.messages
+      const { messages, ...rest } = conversation
+
+      return {
+        ...rest,
+        lastMessage: rest.lastMessage ?? lastMessageRecord?.content ?? null,
+        lastMessageMeta: lastMessageRecord
+          ? {
+              id: lastMessageRecord.id,
+              createdAt: lastMessageRecord.createdAt,
+              senderRole: lastMessageRecord.sender.role,
+            }
+          : null,
       }
     })
 
@@ -59,9 +99,8 @@ export async function POST() {
 
     // Find a trader to chat with
     const trader = await prisma.user.findFirst({
-      where: {
-        role: "TRADER"
-      }
+      where: { role: "TRADER" },
+      select: { id: true },
     })
 
     if (!trader) {
@@ -73,6 +112,20 @@ export async function POST() {
       where: {
         userId: session.user.id,
         traderId: trader.id
+      },
+      include: {
+        user: {
+          select: {
+            username: true,
+            image: true,
+          }
+        },
+        trader: {
+          select: {
+            username: true,
+            image: true,
+          }
+        }
       }
     })
 
@@ -87,7 +140,7 @@ export async function POST() {
     const conversation = await prisma.conversation.create({
       data: {
         userId: session.user.id,
-        traderId: trader.id
+        traderId: trader.id,
       },
       include: {
         user: {

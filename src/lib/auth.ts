@@ -4,6 +4,96 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
 
+type BaseUserSelect = {
+  id: true
+  email: true
+  username: true
+  role: true
+  image: true
+  passwordHash?: true
+  bio?: true
+}
+
+const baseSelect: BaseUserSelect = {
+  id: true,
+  email: true,
+  username: true,
+  role: true,
+  image: true,
+}
+
+const credentialsSelect: BaseUserSelect & { passwordHash: true } = {
+  ...baseSelect,
+  passwordHash: true,
+  bio: true,
+}
+
+const sessionSelect: BaseUserSelect = {
+  ...baseSelect,
+  bio: true,
+}
+
+const isMissingBioColumnError = (error: unknown) => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string" &&
+    (error as { message: string }).message.includes("The column `User.bio` does not exist")
+  )
+}
+
+const fetchUserForCredentials = async (email: string) => {
+  try {
+    return await prisma.user.findUnique({
+      where: { email },
+      select: credentialsSelect,
+    })
+  } catch (error) {
+    if (isMissingBioColumnError(error)) {
+      const { bio, ...fallbackSelect } = credentialsSelect
+      return prisma.user.findUnique({
+        where: { email },
+        select: fallbackSelect,
+      }) as Promise<{
+        id: string
+        email: string | null
+        username: string | null
+        role: string
+        image: string | null
+        passwordHash: string | null
+        bio?: string | null
+      } | null>
+    }
+    throw error
+  }
+}
+
+const fetchUserById = async (id: string) => {
+  try {
+    return await prisma.user.findUnique({
+      where: { id },
+      select: sessionSelect,
+    })
+  } catch (error) {
+    if (isMissingBioColumnError(error)) {
+      const { bio, ...fallbackSelect } = sessionSelect
+      return prisma.user.findUnique({
+        where: { id },
+        select: fallbackSelect,
+      }) as Promise<{
+        id: string
+        email: string | null
+        username: string | null
+        role: string
+        image: string | null
+        bio?: string | null
+      } | null>
+    }
+    throw error
+  }
+}
+
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -22,11 +112,7 @@ export const authOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        })
+        const user = await fetchUserForCredentials(credentials.email)
 
         if (!user) {
           return null
@@ -48,7 +134,7 @@ export const authOptions = {
           name: user.username,
           role: user.role,
           image: user.image ?? null,
-          bio: (user as any).bio ?? null,
+          bio: "bio" in user ? (user as { bio?: string | null }).bio ?? null : null,
         }
       }
     })
@@ -67,16 +153,14 @@ export const authOptions = {
         mutableToken.bio = (user as any).bio ?? null
       }
       if (trigger === "update" && mutableToken.sub) {
-        const latestUser = await prisma.user.findUnique({
-          where: { id: mutableToken.sub },
-        })
+        const latestUser = await fetchUserById(mutableToken.sub)
         if (latestUser) {
-          const latest = latestUser as any
-          mutableToken.name = latest.username ?? mutableToken.name
-          mutableToken.email = latest.email ?? mutableToken.email
-          mutableToken.picture = latest.image ?? mutableToken.picture ?? null
-          mutableToken.role = latest.role ?? mutableToken.role
-          mutableToken.bio = latest.bio ?? mutableToken.bio ?? null
+          mutableToken.name = latestUser.username ?? mutableToken.name
+          mutableToken.email = latestUser.email ?? mutableToken.email
+          mutableToken.picture = latestUser.image ?? mutableToken.picture ?? null
+          mutableToken.role = latestUser.role ?? mutableToken.role
+          mutableToken.bio =
+            "bio" in latestUser ? latestUser.bio ?? mutableToken.bio ?? null : mutableToken.bio ?? null
         }
       }
       return mutableToken

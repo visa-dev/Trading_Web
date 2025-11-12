@@ -1,105 +1,97 @@
 import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
+import { z } from "zod"
 import { prisma } from "@/lib/db"
 
-const MIN_PASSWORD_LENGTH = 8
+const signUpSchema = z.object({
+  name: z.string().trim().min(2, "Name must be at least 2 characters long"),
+  email: z.string().trim().toLowerCase().email("Please provide a valid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters long")
+    .regex(/[A-Za-z]/, "Password must contain letters")
+    .regex(/[0-9]/, "Password must contain numbers"),
+  imageUrl: z
+    .string()
+    .url("Profile image URL is invalid")
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
+})
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-const sanitizeUsername = (name: string) => {
-  const base = name
+const normalizeName = (name: string) =>
+  name
     .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 20)
-    .replace(/-+$/g, "")
-
-  return base.length > 0 ? base : "user"
-}
+    .replace(/\s+/g, " ")
+    .replace(/\p{C}+/gu, "")
 
 const generateUniqueUsername = async (name: string) => {
-  const base = sanitizeUsername(name)
-  let candidate = base
-  let suffix = 1
+  const base = normalizeName(name) || `Trader ${Date.now().toString().slice(-6)}`
+  const maxLength = 40
+  const truncatedBase = base.length > maxLength ? base.slice(0, maxLength).trim() : base
 
-  while (await prisma.user.findUnique({ where: { username: candidate } })) {
-    candidate = `${base}-${suffix}`
-    suffix += 1
-    if (candidate.length > 30) {
-      const trimmedBase = base.slice(0, Math.max(1, 30 - (`-${suffix}`).length))
-      candidate = `${trimmedBase}-${suffix}`
+  let attempt = 0
+  let candidate = truncatedBase
+
+  while (attempt < 50) {
+    const existing = await prisma.user.findUnique({
+      where: { username: candidate },
+      select: { id: true },
+    })
+    if (!existing) {
+      return candidate
     }
+    attempt += 1
+    const suffix = ` ${attempt + 1}`
+    const prefixLength = Math.max(1, maxLength - suffix.length)
+    candidate = `${truncatedBase.slice(0, prefixLength)}${suffix}`
   }
 
-  return candidate
+  return `${truncatedBase.slice(0, maxLength - 7)} ${Date.now().toString().slice(-6)}`
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json().catch(() => null)
-    const name: string | undefined = body?.name
-    const email: string | undefined = body?.email
-    const password: string | undefined = body?.password
-    const imageUrl: unknown = body?.imageUrl
+    const body = await request.json()
+    const parsed = signUpSchema.safeParse(body)
 
-    if (!name || !email || !password) {
-      return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 })
+    if (!parsed.success) {
+      const errorMessage = parsed.error.issues[0]?.message ?? "Invalid request payload"
+      return NextResponse.json({ error: errorMessage }, { status: 400 })
     }
 
-    const trimmedName = name.trim()
-    const normalizedEmail = email.trim().toLowerCase()
-
-    if (trimmedName.length < 2) {
-      return NextResponse.json({ error: "Please provide a valid name." }, { status: 400 })
-    }
-
-    if (!emailRegex.test(normalizedEmail)) {
-      return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 })
-    }
-
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      return NextResponse.json(
-        { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.` },
-        { status: 400 }
-      )
-    }
+    const { name, email, password, imageUrl } = parsed.data
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail }
+      where: { email },
+      select: { id: true },
     })
 
     if (existingUser) {
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 })
     }
 
-    const username = await generateUniqueUsername(trimmedName)
-    const passwordHash = await bcrypt.hash(password, 10)
-
-    const sanitizedImageUrl =
-      typeof imageUrl === "string" && imageUrl.trim().length > 0 ? imageUrl.trim() : null
+    const username = await generateUniqueUsername(name)
+    const passwordHash = await bcrypt.hash(password, 12)
 
     const user = await prisma.user.create({
       data: {
-        email: normalizedEmail,
+        email,
         username,
         passwordHash,
+        image: imageUrl ?? null,
         role: "USER",
-        image: sanitizedImageUrl ?? undefined
       },
       select: {
         id: true,
         email: true,
         username: true,
-        role: true,
-        image: true
-      }
+        image: true,
+      },
     })
 
     return NextResponse.json({ user }, { status: 201 })
   } catch (error) {
-    console.error("Error creating user:", error)
+    console.error("Error during sign up:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
-

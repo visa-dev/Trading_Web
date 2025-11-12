@@ -55,8 +55,6 @@ export function DashboardClient({ session }: DashboardClientProps) {
 
   useEffect(() => {
     fetchDashboardStats()
-    const interval = setInterval(fetchDashboardStats, 15000)
-    return () => clearInterval(interval)
   }, [fetchDashboardStats])
 
   useEffect(() => {

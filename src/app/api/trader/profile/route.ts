@@ -102,8 +102,8 @@ export async function GET() {
       prisma.traderReview.count({
         where: { traderId: trader.id, status: "APPROVED" },
       }),
-      prisma.performancePost.count({ where: { type: "PERFORMANCE" } }),
-      prisma.performancePost.count({ where: { type: "ANALYTICS" } }),
+      prisma.performancePost.count({ where: { type: "PERFORMANCE", published: true } }),
+      prisma.performancePost.count({ where: { type: "ANALYTICS", published: true } }),
       prisma.tradingVideo.count(),
     ])
 

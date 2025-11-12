@@ -10,7 +10,6 @@ interface TradingVideo {
   title: string
   youtubeUrl: string
   description: string
-  performanceMetrics?: Record<string, unknown>
   createdAt: string
 }
 

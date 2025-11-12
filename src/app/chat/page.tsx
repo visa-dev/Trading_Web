@@ -5,7 +5,6 @@ import { redirect } from "next/navigation"
 import { useEffect, useState } from "react"
 import { ChatInterface } from "@/components/chat-interface"
 import { ConversationsList } from "@/components/conversations-list"
-import { ChatStats } from "@/components/chat-stats"
 import { LoadingSpinner } from "@/components/loading-spinner"
 
 export default function ChatPage() {
@@ -44,8 +43,6 @@ export default function ChatPage() {
             Manage conversations with users and provide trading insights
           </p>
         </div>
-
-        <ChatStats />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
           <div className="lg:col-span-1">

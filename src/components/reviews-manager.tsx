@@ -58,13 +58,17 @@ export function ReviewsManager() {
   const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
-    fetchReviews()
-    fetchTraderReviews()
+    fetchReviews(filter)
+    fetchTraderReviews(filter)
   }, [])
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (status?: "ALL" | "PENDING" | "APPROVED" | "REJECTED") => {
     try {
-      const response = await fetch('/api/reviews')
+      const searchParams = new URLSearchParams()
+      if (status && status !== "ALL") {
+        searchParams.set("status", status)
+      }
+      const response = await fetch(`/api/reviews${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)
       if (response.ok) {
         const data = await response.json()
         setReviews(data.reviews)
@@ -76,9 +80,13 @@ export function ReviewsManager() {
     }
   }
 
-  const fetchTraderReviews = async () => {
+  const fetchTraderReviews = async (status?: "ALL" | "PENDING" | "APPROVED" | "REJECTED") => {
     try {
-      const response = await fetch('/api/trader-reviews')
+      const searchParams = new URLSearchParams()
+      if (status && status !== "ALL") {
+        searchParams.set("status", status)
+      }
+      const response = await fetch(`/api/trader-reviews${searchParams.toString() ? `?${searchParams.toString()}` : ""}`)
       if (response.ok) {
         const data = await response.json()
         setTraderReviews(data.reviews)
@@ -170,13 +178,10 @@ export function ReviewsManager() {
     )
   }
 
-  const filteredReviews = reviews.filter(review => 
-    filter === "ALL" || review.status === filter
-  )
-
-  const filteredTraderReviews = traderReviews.filter(review => 
-    filter === "ALL" || review.status === filter
-  )
+  useEffect(() => {
+    fetchReviews(filter)
+    fetchTraderReviews(filter)
+  }, [filter])
 
   const renderPostReviewCard = (review: Review) => (
             <Card key={review.id}>
@@ -428,13 +433,13 @@ export function ReviewsManager() {
 
         <TabsContent value="posts" className="mt-6">
           <div className="space-y-4">
-            {filteredReviews.length === 0 ? renderEmptyState("posts & videos") : filteredReviews.map(renderPostReviewCard)}
+            {reviews.length === 0 ? renderEmptyState("posts & videos") : reviews.map(renderPostReviewCard)}
           </div>
         </TabsContent>
 
         <TabsContent value="trader" className="mt-6">
           <div className="space-y-4">
-            {filteredTraderReviews.length === 0 ? renderEmptyState("trader") : filteredTraderReviews.map(renderTraderReviewCard)}
+            {traderReviews.length === 0 ? renderEmptyState("trader") : traderReviews.map(renderTraderReviewCard)}
           </div>
         </TabsContent>
       </Tabs>

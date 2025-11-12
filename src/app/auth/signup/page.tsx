@@ -151,35 +151,34 @@ export default function SignUpPage() {
       return
     }
 
-    if (!avatarFile) {
-      toast.error("Please upload a profile image")
-      return
-    }
-
     const normalizedEmail = formData.email.trim().toLowerCase()
     const trimmedName = formData.name.trim()
 
     setIsLoading(true)
 
     try {
-      const uploadFormData = new FormData()
-      uploadFormData.append("file", avatarFile)
-      uploadFormData.append("folder", "profile-images")
+      let avatarUrl: string | null = null
 
-      uploadFormData.append("allowGuest", "true")
+      if (avatarFile) {
+        const uploadFormData = new FormData()
+        uploadFormData.append("file", avatarFile)
+        uploadFormData.append("folder", "profile-images")
+        uploadFormData.append("allowGuest", "true")
 
-      const uploadResponse = await fetch("/api/uploads", {
-        method: "POST",
-        body: uploadFormData,
-      })
+        const uploadResponse = await fetch("/api/uploads", {
+          method: "POST",
+          body: uploadFormData,
+        })
 
-      if (!uploadResponse.ok) {
-        const uploadError = await uploadResponse.json().catch(() => ({}))
-        toast.error(uploadError?.error ?? "Failed to upload profile image.")
-        return
+        if (!uploadResponse.ok) {
+          const uploadError = await uploadResponse.json().catch(() => ({}))
+          toast.error(uploadError?.error ?? "Failed to upload profile image.")
+          return
+        }
+
+        const uploadJson = await uploadResponse.json()
+        avatarUrl = typeof uploadJson?.url === "string" ? uploadJson.url : null
       }
-
-      const { url: avatarUrl } = await uploadResponse.json()
 
       const response = await fetch("/api/auth/signup", {
         method: "POST",

@@ -62,40 +62,55 @@ export function Navigation() {
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div className="max-w-7xl mx-auto container-responsive">
-        <div className="flex justify-between items-center h-20 sm:h-24">
-          {/* Sahan Akalanka Text - No Logo */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {sessionRole === "TRADER" ? (
-              <button
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    // If on dashboard page, refresh it; otherwise navigate to dashboard
-                    if (window.location.pathname === '/dashboard') {
-                      window.location.reload()
-                    } else {
-                      window.location.href = '/dashboard'
-                    }
-                  }
-                }}
-                className="text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer"
+        <div className="flex items-center h-20 sm:h-24">
+          {/* Mobile: Hamburger + Centered Brand */}
+          <div className="flex items-center flex-1 md:flex-none md:w-auto">
+            {!session || sessionRole !== "TRADER" ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden text-white hover:text-yellow-400"
               >
-                Sahan Akalanka
-              </button>
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </Button>
             ) : (
-              <Link href="/">
-                <h1 className="text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer">
-                  Sahan Akalanka
-                </h1>
-              </Link>
+              <span className="md:hidden w-10" />
             )}
-          </motion.div>
 
-          {/* Center Navigation - For all users except traders */}
+            <motion.div
+              className="flex-1 flex justify-center md:justify-start md:pl-0 pl-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {sessionRole === "TRADER" ? (
+                <button
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      if (window.location.pathname === '/dashboard') {
+                        window.location.reload()
+                      } else {
+                        window.location.href = '/dashboard'
+                      }
+                    }
+                  }}
+                  className="text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer"
+                >
+                  Sahan Akalanka
+                </button>
+              ) : (
+                <Link href="/" className="block">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer">
+                    Sahan Akalanka
+                  </h1>
+                </Link>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Desktop Navigation - Center */}
           {!session || sessionRole !== "TRADER" ? (
-            <div className="hidden md:flex items-center space-x-8">
+            <div className="hidden md:flex items-center space-x-8 md:mx-10">
               <Link href="/posts" className={desktopNavClasses("/posts")}>
                 <TrendingUp className="w-5 h-5" />
                 <span className="font-medium">Performance</span>
@@ -119,22 +134,8 @@ export function Navigation() {
             </div>
           ) : null}
 
-          {/* Mobile Menu Button - For all users except traders */}
-          {!session || sessionRole !== "TRADER" ? (
-            <div className="md:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-white hover:text-yellow-400"
-              >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </Button>
-            </div>
-          ) : null}
-
           {/* Right Side: User Avatar */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-none ml-auto">
             {/* User Avatar and Auth */}
             {status === "loading" ? (
               <motion.div 
@@ -165,7 +166,7 @@ export function Navigation() {
                   </motion.div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
-                  className="w-64 glass-effect border border-yellow-400/20 shadow-2xl" 
+                  className="w-64 bg-slate-900/95 border border-yellow-400/20 shadow-2xl backdrop-blur-md" 
                   align="end" 
                   forceMount
                 >
