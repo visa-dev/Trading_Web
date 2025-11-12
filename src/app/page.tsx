@@ -39,7 +39,7 @@ interface TradingVideo {
   title: string
   youtubeUrl: string
   description: string
-  createdAt: string
+  createdAt: string | Date
 }
 
 export default function Home() {
@@ -160,9 +160,6 @@ export default function Home() {
       <Hero />
       <SocialTradingOverview />
       
-      {/* Reviews Carousel Section */}
-      <ReviewsCarousel />
-      
       {/* MyFXBook Iframe Section */}
       <MyFXBookIframe />
       
@@ -221,6 +218,94 @@ export default function Home() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Analytics Posts Section */}
+      <section className="section-spacing bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700">
+        <div className="max-w-7xl mx-auto container-responsive">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-flex items-center space-x-2 mb-6">
+              <TrendingUp className="w-5 h-5 text-yellow-400" />
+              <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Market Intelligence</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+              Deep-Dive
+              <span className="block gradient-text-gold animate-gradient" style={{ backgroundSize: "200% 200%" }}>
+                Analytics Posts
+              </span>
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+              Explore strategy breakdowns and signal-backed analysis from our professional traders.
+            </p>
+          </motion.div>
+
+          {postsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <motion.div
+                  key={`analytics-skeleton-${i}`}
+                  className="animate-pulse"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  <div className="card-material p-6">
+                    <div className="h-6 bg-gray-700 rounded mb-4"></div>
+                    <div className="h-4 bg-gray-700 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-700 rounded w-3/4 mb-6"></div>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="h-16 bg-gray-700 rounded"></div>
+                      <div className="h-16 bg-gray-700 rounded"></div>
+                    </div>
+                    <div className="h-8 bg-gray-700 rounded"></div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : analyticsPosts.length > 0 ? (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              {analyticsPosts.map((post, index) => (
+                <motion.div
+                  key={post.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <PerformanceCard post={post} />
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              className="text-center py-16"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <div className="card-material p-12 max-w-xl mx-auto">
+                <BarChart3 className="w-16 h-16 mx-auto mb-6 text-gray-400" />
+                <h3 className="text-xl font-bold text-white mb-4">No Analytics Posts Yet</h3>
+                <p className="text-gray-300">
+                  Traders will soon share in-depth analytics and strategy breakdowns here.
+                </p>
+              </div>
+            </motion.div>
+          )}
         </div>
       </section>
 
@@ -371,64 +456,6 @@ export default function Home() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-2xl font-semibold text-white mb-6">Analytics Posts</h3>
-              {postsLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {[1, 2, 3].map((i) => (
-                    <motion.div
-                      key={`analytics-skeleton-${i}`}
-                      className="animate-pulse"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: i * 0.1 }}
-                    >
-                      <div className="bg-gray-800/50 rounded-xl shadow-lg p-6">
-                        <div className="h-48 bg-gray-700 rounded mb-4"></div>
-                        <div className="h-6 bg-gray-700 rounded mb-4"></div>
-                        <div className="h-4 bg-gray-700 rounded mb-2"></div>
-                        <div className="h-4 bg-gray-700 rounded w-3/4 mb-4"></div>
-                        <div className="h-10 bg-gray-700 rounded"></div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              ) : analyticsPosts.length > 0 ? (
-                <motion.div
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ duration: 0.8 }}
-                  viewport={{ once: true }}
-                >
-                  {analyticsPosts.map((post, index) => (
-                    <motion.div
-                      key={post.id}
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: index * 0.1 }}
-                      viewport={{ once: true }}
-                    >
-                      <PerformanceCard post={post} />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              ) : (
-                <div className="bg-gray-800/50 rounded-xl shadow-lg p-12 text-center">
-                  <BarChart3 className="w-16 h-16 mx-auto mb-6 text-gray-400" />
-                  <h3 className="text-xl font-bold text-white mb-4">No Analytics Posts Yet</h3>
-                  <p className="text-gray-300">
-                    Traders will soon share in-depth analytics and strategy breakdowns here.
-                  </p>
-                </div>
-              )}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
               viewport={{ once: true }}
             >
@@ -532,6 +559,9 @@ export default function Home() {
         isOpen={isVideoModalOpen}
         onClose={handleCloseVideoModal}
       />
+
+      {/* Reviews Carousel Section */}
+      <ReviewsCarousel />
 
       <Footer />
     </div>
