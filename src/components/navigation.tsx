@@ -1,6 +1,7 @@
 "use client"
 
 import { useSession, signOut } from "next-auth/react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -12,14 +13,34 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Phone, Copy } from "lucide-react"
+import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Copy, Shield } from "lucide-react"
 import Link from "next/link"
 
 export function Navigation() {
   const { data: session, status } = useSession()
+  const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const sessionRole = (session?.user as { role?: string } | undefined)?.role ?? null
+
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === href
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  const desktopNavClasses = (href: string) =>
+    `group relative flex items-center space-x-2 text-sm font-medium transition-colors duration-300 ${
+      isActive(href) ? "text-yellow-400" : "text-white hover:text-yellow-400"
+    } after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-yellow-400 after:transition-transform after:duration-300 group-hover:after:scale-x-100 ${
+      isActive(href) ? "after:scale-x-100" : "after:scale-x-0"
+    }`
+
+  const mobileNavClasses = (href: string) =>
+    `group flex items-center space-x-3 text-white transition-colors duration-300 py-2 ${
+      isActive(href) ? "text-yellow-400" : "hover:text-yellow-400"
+    }`
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,21 +96,25 @@ export function Navigation() {
           {/* Center Navigation - For all users except traders */}
           {!session || sessionRole !== "TRADER" ? (
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/posts" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
+              <Link href="/posts" className={desktopNavClasses("/posts")}>
                 <TrendingUp className="w-5 h-5" />
                 <span className="font-medium">Performance</span>
               </Link>
-              <Link href="/academy" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
+              <Link href="/academy" className={desktopNavClasses("/academy")}>
                 <GraduationCap className="w-5 h-5" />
                 <span className="font-medium">Academy</span>
               </Link>
-              <Link href="/copy-trading" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
+              <Link href="/copy-trading" className={desktopNavClasses("/copy-trading")}>
                 <Copy className="w-5 h-5" />
                 <span className="font-medium">Copy Trading</span>
               </Link>
-              <Link href="/contact" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
-                <Phone className="w-5 h-5" />
-                <span className="font-medium">Contact Us</span>
+              <Link href="/account-management" className={desktopNavClasses("/account-management")}>
+                <Shield className="w-5 h-5" />
+                <span className="font-medium">Account Management</span>
+              </Link>
+              <Link href="/about" className={desktopNavClasses("/about")}>
+                <User className="w-5 h-5" />
+                <span className="font-medium">About Me</span>
               </Link>
             </div>
           ) : null}
@@ -235,7 +260,7 @@ export function Navigation() {
             <div className="px-4 py-4 space-y-4">
               <Link 
                 href="/posts" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                className={mobileNavClasses("/posts")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <TrendingUp className="w-5 h-5" />
@@ -243,7 +268,7 @@ export function Navigation() {
               </Link>
               <Link 
                 href="/academy" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                className={mobileNavClasses("/academy")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <GraduationCap className="w-5 h-5" />
@@ -251,19 +276,27 @@ export function Navigation() {
               </Link>
               <Link 
                 href="/copy-trading" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                className={mobileNavClasses("/copy-trading")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Copy className="w-5 h-5" />
                 <span className="font-medium">Copy Trading</span>
               </Link>
               <Link 
-                href="/contact" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                href="/account-management" 
+                className={mobileNavClasses("/account-management")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Phone className="w-5 h-5" />
-                <span className="font-medium">Contact Us</span>
+                <Shield className="w-5 h-5" />
+                <span className="font-medium">Account Management</span>
+              </Link>
+              <Link 
+                href="/about" 
+                className={mobileNavClasses("/about")}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">About Me</span>
               </Link>
               {session && (
                 <Button

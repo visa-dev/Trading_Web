@@ -1,29 +1,116 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { TrendingUp, BarChart3, Shield, Target, ArrowRight, Zap, Star, Sparkles, Rocket, CheckCircle, Award, Users, Calendar } from "lucide-react"
-import { 
-  pageVariants, 
-  pageTransition, 
+import {
+  pageVariants,
+  pageTransition,
   containerVariants,
   itemVariants,
-  textRevealVariants,
   scaleBounceVariants,
-  floatVariants
+  floatVariants,
 } from "@/lib/animations"
-import { SiFacebook, SiTelegram, SiTiktok } from "react-icons/si"
+import { SiFacebook, SiTelegram, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
 
-import profile from '@/assets/profile.jpg'
+import profile from "@/assets/profile.jpg"
+
+type TraderStats = {
+  totalPerformancePosts: number
+  totalAnalyticsPosts: number
+  totalVideos: number
+  totalTraderReviews: number
+  averageTraderRating: number
+  averageWinRate: number
+  averageDrawdown: number
+  averageRiskReward: number
+  averageProfitLoss: number
+} | null
+
+const formatPercent = (value?: number | null, fractionDigits = 1) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "N/A"
+  return `${value.toFixed(fractionDigits)}%`
+}
+
+const formatRatio = (value?: number | null, fractionDigits = 2) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "N/A"
+  return value.toFixed(fractionDigits)
+}
+
+const formatNumber = (value?: number | null) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "0"
+  return new Intl.NumberFormat().format(value)
+}
 
 export function Hero() {
-  const achievements = [
-    { icon: TrendingUp, value: "94%", label: "Win Rate", color: "text-green-400" },
-    { icon: BarChart3, value: "127", label: "Total Trades", color: "text-blue-400" },
-    { icon: Shield, value: "3.8%", label: "Max Drawdown", color: "text-yellow-400" },
-    { icon: Target, value: "2.4", label: "Risk/Reward", color: "text-purple-400" }
-  ]
+  const [stats, setStats] = useState<TraderStats>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/trader/profile", { cache: "no-store" })
+        if (!response.ok) {
+          throw new Error("Failed to fetch trader stats")
+        }
+        const data = await response.json()
+        if (isMounted && data?.stats) {
+          setStats(data.stats as TraderStats)
+        }
+      } catch (error) {
+        console.error("Failed to load trader stats:", error)
+      }
+    }
+
+    fetchStats()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const achievements = useMemo(() => {
+    if (!stats) {
+      return [
+        { icon: TrendingUp, value: "N/A", label: "Win Rate", color: "text-green-400" },
+        { icon: BarChart3, value: "0", label: "Total Posts", color: "text-blue-400" },
+        { icon: Shield, value: "N/A", label: "Max Drawdown", color: "text-yellow-400" },
+        { icon: Target, value: "N/A", label: "Risk/Reward", color: "text-purple-400" },
+      ]
+    }
+
+    const totalPosts = stats.totalPerformancePosts + stats.totalAnalyticsPosts
+
+    return [
+      {
+        icon: TrendingUp,
+        value: formatPercent(stats.averageWinRate),
+        label: "Win Rate",
+        color: "text-green-400",
+      },
+      {
+        icon: BarChart3,
+        value: formatNumber(totalPosts),
+        label: "Total Posts",
+        color: "text-blue-400",
+      },
+      {
+        icon: Shield,
+        value: formatPercent(stats.averageDrawdown),
+        label: "Max Drawdown",
+        color: "text-yellow-400",
+      },
+      {
+        icon: Target,
+        value: formatRatio(stats.averageRiskReward),
+        label: "Risk/Reward",
+        color: "text-purple-400",
+      },
+    ]
+  }, [stats])
 
   const personalInfo = [
     { icon: Calendar, text: "10+ Years Experience", color: "text-yellow-400" },
@@ -33,22 +120,34 @@ export function Hero() {
 
   const socialLinks = [
     {
-      href: "https://www.facebook.com/share/1CuHaE3Twp/",
+      href: "https://www.facebook.com/hasakalanka",
       label: "Facebook",
       icon: SiFacebook,
       gradient: "from-blue-500/20 to-sky-500/20"
     },
     {
-      href: "https://t.me/sahanakalanka",
+      href: "https://t.me/athenstrading",
       label: "Telegram",
       icon: SiTelegram,
       gradient: "from-cyan-500/20 to-blue-500/20"
     },
     {
-      href: "https://www.tiktok.com/@sahan_akalanka",
+      href: "https://www.tiktok.com/@saas.me",
       label: "TikTok",
       icon: SiTiktok,
       gradient: "from-pink-500/20 to-purple-500/20"
+    },
+    {
+      href: "https://www.instagram.com/sahan__akalanka",
+      label: "Instagram",
+      icon: SiInstagram,
+      gradient: "from-rose-500/20 to-amber-500/20"
+    },
+    {
+      href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ",
+      label: "YouTube",
+      icon: SiYoutube,
+      gradient: "from-red-500/20 to-orange-500/20"
     },
   ]
 
@@ -242,10 +341,13 @@ export function Hero() {
                   <div className="card-material p-6 text-center hover:border-yellow-400/50 transition-all duration-300">
                     <motion.div
                       className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r ${
-                        stat.label === 'Win Rate' ? 'from-green-500/20 to-emerald-500/20' :
-                        stat.label === 'Total Trades' ? 'from-blue-500/20 to-cyan-500/20' :
-                        stat.label === 'Max Drawdown' ? 'from-yellow-500/20 to-orange-500/20' :
-                        'from-purple-500/20 to-pink-500/20'
+                        stat.label === "Win Rate"
+                          ? "from-green-500/20 to-emerald-500/20"
+                          : stat.label === "Total Posts"
+                          ? "from-blue-500/20 to-cyan-500/20"
+                          : stat.label === "Max Drawdown"
+                          ? "from-yellow-500/20 to-orange-500/20"
+                          : "from-purple-500/20 to-pink-500/20"
                       } flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}
                       variants={scaleBounceVariants}
                       initial="hidden"

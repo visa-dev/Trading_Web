@@ -8,19 +8,56 @@ const formatAverage = (values: Array<number | null | undefined>) => {
   return sum / filtered.length
 }
 
+const isMissingBioColumnError = (error: unknown) => {
+  if (!(error instanceof Error)) return false
+  return error.message.includes("User.bio")
+}
+
+type TraderRecord = {
+  id: string
+  username: string
+  email: string
+  image: string | null
+  createdAt: Date
+  bio?: string | null
+}
+
 export async function GET() {
   try {
-    const trader = await prisma.user.findFirst({
-      where: { role: "TRADER" },
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        image: true,
-        bio: true,
-        createdAt: true,
-      },
-    })
+    let trader: TraderRecord | null = null
+    let traderBio = ""
+
+    try {
+      const traderWithBio = await prisma.user.findFirst({
+        where: { role: "TRADER" },
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          image: true,
+          bio: true,
+          createdAt: true,
+        },
+      })
+      trader = traderWithBio
+      traderBio = traderWithBio?.bio ?? ""
+    } catch (error) {
+      if (isMissingBioColumnError(error)) {
+        const traderWithoutBio = await prisma.user.findFirst({
+          where: { role: "TRADER" },
+          select: {
+            id: true,
+            username: true,
+            email: true,
+            image: true,
+            createdAt: true,
+          },
+        })
+        trader = traderWithoutBio
+      } else {
+        throw error
+      }
+    }
 
     if (!trader) {
       return NextResponse.json({ error: "Trader profile not found" }, { status: 404 })
@@ -86,7 +123,7 @@ export async function GET() {
       trader: {
         id: trader.id,
         name: trader.username,
-        bio: trader.bio ?? "",
+        bio: traderBio,
         image: trader.image,
         createdAt: trader.createdAt.toISOString(),
       },

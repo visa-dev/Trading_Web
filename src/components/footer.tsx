@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { BarChart3, Mail, Phone, Facebook, ArrowUp } from "lucide-react"
-import { FaTiktok } from "react-icons/fa"
+import { BarChart3, Mail, Phone, ArrowUp } from "lucide-react"
+import { SiFacebook, SiTelegram, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
 import { Button } from "@/components/ui/button"
 
 export function Footer() {
@@ -30,8 +30,11 @@ export function Footer() {
   }
 
   const socialLinks = [
-    { name: "Facebook", href: "https://www.facebook.com/share/1CuHaE3Twp/", icon: Facebook },
-    { name: "TikTok", href: "https://www.tiktok.com/@saas.me?fbclid=IwVERDUANwbaVleHRuA2FlbQIxMAABHleOtY_nuEn_8tcyR-EbRMVTRpiPg8Be71MKn9vZIO6cLcTbDzDohwBu-cJo_aem_rdWmRIcNKUlNcvLlF_AQog", icon: FaTiktok },
+    { name: "Telegram", href: "https://t.me/athenstrading", icon: SiTelegram },
+    { name: "Facebook", href: "https://www.facebook.com/hasakalanka", icon: SiFacebook },
+    { name: "TikTok", href: "https://www.tiktok.com/@saas.me", icon: SiTiktok },
+    { name: "Instagram", href: "https://www.instagram.com/sahan__akalanka", icon: SiInstagram },
+    { name: "YouTube", href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ", icon: SiYoutube },
   ]
 
   return (
@@ -66,7 +69,7 @@ export function Footer() {
               <div className="space-y-3">
                 <div className="flex items-center text-gray-400">
                   <Mail className="w-4 h-4 mr-3 text-yellow-400" />
-                  <span>contact@sahanakalanka.com</span>
+                  <span>info@sahanakalanka.com</span>
                 </div>
                 <div className="flex items-center text-gray-400">
                   <Phone className="w-4 h-4 mr-3 text-yellow-400" />

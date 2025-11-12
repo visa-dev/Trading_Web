@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Star, MessageSquare, FileText, Video } from "lucide-react"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { motion } from "framer-motion"
 
 interface Review {
@@ -93,10 +94,7 @@ export default function ReviewsPage() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+        <LoadingSpinner message="Fetching your reviews..." />
       </div>
     )
   }

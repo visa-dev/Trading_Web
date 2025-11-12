@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { ChatInterface } from "@/components/chat-interface"
 import { ConversationsList } from "@/components/conversations-list"
 import { ChatStats } from "@/components/chat-stats"
+import { LoadingSpinner } from "@/components/loading-spinner"
 
 export default function ChatPage() {
   const { data: session, status } = useSession()
@@ -25,10 +26,7 @@ export default function ChatPage() {
   if (status === "loading") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+        <LoadingSpinner message="Loading trader inbox..." />
       </div>
     )
   }

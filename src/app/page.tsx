@@ -5,11 +5,13 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { PerformanceCard } from "@/components/performance-card"
 import { Hero } from "@/components/hero"
+import { SocialTradingOverview } from "@/components/social-trading-overview"
 import { Footer } from "@/components/footer"
 import { MyFXBookIframe } from "@/components/myfxbook-iframe"
 import { ReviewsCarousel } from "@/components/reviews-carousel"
 import { VideoCard } from "@/components/video-card"
 import { VideoModal } from "@/components/video-modal"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { motion } from "framer-motion"
 import { TrendingUp, BarChart3, Shield, ArrowRight, Zap, Sparkles, Brain, Eye, Video } from "lucide-react"
 import Link from "next/link"
@@ -110,10 +112,7 @@ export default function Home() {
   if (status === "loading" || userRole === "TRADER") {
     return (
       <div className="min-h-screen hero-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white">Loading...</p>
-        </div>
+        <LoadingSpinner message="Preparing your dashboard..." />
       </div>
     )
   }
@@ -160,6 +159,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       <Hero />
+      <SocialTradingOverview />
       
       {/* Reviews Carousel Section */}
       <ReviewsCarousel />

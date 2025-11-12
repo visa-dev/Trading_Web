@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import Cropper, { Area } from "react-easy-crop"
 import { User, Mail, Shield, Calendar, Image as ImageIcon, Upload, Trash } from "lucide-react"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import { toast } from "sonner"
 import { getCroppedImage } from "@/lib/crop-image"
 
@@ -179,10 +180,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4" />
-          <p className="text-gray-400">Loading...</p>
-        </div>
+        <LoadingSpinner message="Fetching your profile..." />
       </div>
     )
   }

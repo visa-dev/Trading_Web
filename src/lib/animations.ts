@@ -1,4 +1,4 @@
-import { Variants } from "framer-motion"
+import { Variants, type Transition } from "framer-motion"
 
 // Page transition animations
 export const pageVariants: Variants = {
@@ -23,7 +23,7 @@ export const pageTransition = {
   type: "tween",
   ease: "anticipate",
   duration: 0.6,
-}
+} satisfies Transition
 
 // Stagger animations for lists
 export const containerVariants: Variants = {

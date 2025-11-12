@@ -1,7 +1,8 @@
 import type { Metadata } from "next"
-import "./globals.css"
 import { Providers } from "@/components/providers"
 import { AppShell } from "@/components/app-shell"
+import "./globals.css"
+import { inter, spaceGrotesk, jetBrainsMono, orbitron } from "@/lib/fonts"
 
 export const dynamic = "force-dynamic"
 
@@ -16,7 +17,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable} ${orbitron.variable} dark`}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased selection:bg-yellow-200/30 selection:text-gray-900 transition-colors duration-300">
         <Providers>
           <AppShell>
