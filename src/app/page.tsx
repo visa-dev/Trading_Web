@@ -15,6 +15,7 @@ import { LoadingSpinner } from "@/components/loading-spinner"
 import { motion } from "framer-motion"
 import { TrendingUp, BarChart3, Shield, ArrowRight, Zap, Sparkles, Brain, Eye, Video } from "lucide-react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface PerformancePost {
   id: string
@@ -52,6 +53,7 @@ export default function Home() {
   const [videosLoading, setVideosLoading] = useState(true)
   const [selectedVideo, setSelectedVideo] = useState<TradingVideo | null>(null)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  const [showAllPerformanceLinks, setShowAllPerformanceLinks] = useState(false)
   const userRole = (session?.user as { role?: string } | undefined)?.role ?? null
 
   const fetchPosts = async () => {
@@ -155,6 +157,33 @@ export default function Home() {
     }
   ]
 
+  const accountPerformanceLinks = [
+    {
+      label: "Primary Dashboard",
+      description: "Account management performance overview on SocialTradeTools",
+      href: "https://my.socialtradertools.com/view/LktDiabPtIzhEnNt",
+    },
+    {
+      label: "Live Performance #1",
+      description: "Verified live performance stream with key account metrics",
+      href: "https://my.socialtradertools.com/view/MyimZHO9sgMkMxiw",
+    },
+    {
+      label: "Live Performance #2",
+      description: "Diversified strategy performance feed updated in real time",
+      href: "https://my.socialtradertools.com/view/C3pe6Rbmad180C1Y",
+    },
+    {
+      label: "Live Performance #3",
+      description: "Extended account analytics and equity growth tracking",
+      href: "https://my.socialtradertools.com/view/BdkyYOHAqk9WJPFt",
+    },
+  ]
+
+  const visiblePerformanceLinks = showAllPerformanceLinks
+    ? accountPerformanceLinks
+    : accountPerformanceLinks.slice(0, 2)
+
   return (
     <div className="min-h-screen">
       <Hero />
@@ -188,18 +217,18 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
-                className="group"
+                className="group h-full"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
                 whileHover={{ y: -10 }}
               >
-                <div className={`card-material p-8 hover:border-yellow-400/50 transition-all duration-500 bg-gradient-to-br ${feature.bgColor} border ${feature.borderColor}`}>
+                <div className={`card-material flex h-full flex-col justify-between p-8 hover:border-yellow-400/50 transition-all duration-500 bg-gradient-to-br ${feature.bgColor} border ${feature.borderColor}`}>
                   <motion.div
                     className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}
                     whileHover={{ rotate: 360 }}
@@ -333,6 +362,8 @@ export default function Home() {
               Witness the power of signal-driven trading with live performance data and transparent analytics
             </p>
           </motion.div>
+
+         
 
           {postsLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -61,7 +62,32 @@ const socialLinks = [
   { label: "YouTube", href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ", icon: SiYoutube }
 ]
 
+const performanceLinks = [
+  {
+    label: "Account Management Performance",
+    description: "Primary SocialTradeTools dashboard showcasing managed accounts",
+    href: "https://my.socialtradertools.com/view/LktDiabPtIzhEnNt",
+  },
+  {
+    label: "Signal Intelligence Dashboard",
+    description: "SocialTradeTools live performance stream with verified statistics",
+    href: "https://my.socialtradertools.com/view/MyimZHO9sgMkMxiw",
+  },
+  {
+    label: "Diversified Strategy Feed",
+    description: "Cross-market performance feed highlighting diversified trades",
+    href: "https://my.socialtradertools.com/view/C3pe6Rbmad180C1Y",
+  },
+  {
+    label: "Advanced Equity Analytics",
+    description: "Extended account analytics and equity growth tracking",
+    href: "https://my.socialtradertools.com/view/BdkyYOHAqk9WJPFt",
+  },
+]
+
 export default function AccountManagementPage() {
+  const [showPerformanceLinks, setShowPerformanceLinks] = useState(false)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-16">
       <div className="max-w-6xl mx-auto px-4 space-y-14">
@@ -195,6 +221,57 @@ export default function AccountManagementPage() {
             </p>
           </CardContent>
         </Card>
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+          <Button
+            asChild
+            className="btn-material w-full sm:w-auto"
+          >
+            <Link href="/posts#performance" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+              Go Performance
+            </Link>
+          </Button>
+          <Button
+            variant="outline"
+            className="btn-material-outline w-full sm:w-auto"
+            onClick={() => setShowPerformanceLinks((prev) => !prev)}
+          >
+            Account Management Performance
+          </Button>
+        </div>
+
+        {showPerformanceLinks && (
+          <Card className="card-material border border-slate-800/60 bg-slate-900/60">
+            <CardHeader>
+              <CardTitle className="text-white text-2xl">Account Management Performance</CardTitle>
+              <CardDescription className="text-gray-300">
+                Choose any of the verified SocialTradeTools dashboards to review managed account performance.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {performanceLinks.map((link) => (
+                <div
+                  key={link.href}
+                  className="rounded-xl border border-slate-800/60 bg-slate-900/40 px-5 py-4"
+                >
+                  <p className="text-sm font-semibold text-yellow-400 uppercase tracking-wide">
+                    {link.label}
+                  </p>
+                  <p className="text-sm text-gray-300 mt-1">{link.description}</p>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="btn-material mt-3"
+                  >
+                    <Link href={link.href} target="_blank" rel="noopener noreferrer">
+                      View Dashboard
+                    </Link>
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="card-material border border-slate-800/60 bg-slate-900/60">

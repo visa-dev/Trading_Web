@@ -178,14 +178,12 @@ export async function GET() {
     const html = await response.text()
     const $ = load(html)
 
-    const accountDetailsLabels = ["Growth", "Profit/Loss", "Balance", "Equity", "Equity Percentage"]
+    const accountDetailsLabels = ["Growth", "Profit/Loss", "Balance", "Equity", "Equity Percentage", "Deposits"]
     const tradingStatsLabels = [
       "Total Trades",
       "Win %",
       "Loss %",
       "Lots",
-      "Best Trade",
-      "Worst Trade",
       "Average Win",
       "Average Loss",
       "Longs Won",
@@ -193,7 +191,7 @@ export async function GET() {
       "Commissions",
       "Swap",
     ]
-    const accountInfoLabels = ["Broker", "Broker Server", "Deposits", "Withdrawals", "Application", "Leverage", "Account Type"]
+    const accountInfoLabels = ["Broker", "Broker Server", "Leverage", "Account Type"]
 
     const tables = $("table")
     const parsedStatsTable = tables.length > 0 ? parseDataTable(tables.eq(0), $) : {}

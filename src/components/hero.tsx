@@ -201,9 +201,9 @@ export function Hero() {
         />
       </div>
 
-      <div className="relative max-w-7xl mx-auto container-responsive section-spacing">
+      <div className="relative max-w-7xl mx-auto container-responsive section-spacing pb-24 lg:pb-32">
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[80vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[70vh]">
           
           {/* Left Column - Photo and Personal Information */}
           <motion.div
@@ -217,7 +217,7 @@ export function Hero() {
               className="relative"
               variants={itemVariants}
             >
-              <div className="relative w-80 h-80 mx-auto lg:mx-0">
+              <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-80 lg:h-80 mx-auto lg:mx-0">
                 <motion.div
                   className="w-full h-full rounded-3xl overflow-hidden shadow-2xl"
                   whileHover={{ scale: 1.02 }}
@@ -327,7 +327,7 @@ export function Hero() {
 
             {/* Performance Stats Grid */}
             <motion.div 
-              className="grid grid-cols-2 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-6"
               variants={containerVariants}
             >
               {achievements.map((stat, index) => (
