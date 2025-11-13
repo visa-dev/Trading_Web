@@ -3,6 +3,8 @@ import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
+import type { Adapter } from "next-auth/adapters"
+import { generateUniqueUsername } from "@/lib/user"
 
 type BaseUserSelect = {
   id: true
@@ -94,8 +96,69 @@ const fetchUserById = async (id: string) => {
   }
 }
 
+const prismaAdapter = PrismaAdapter(prisma)
+
+const adapter: Adapter = {
+  ...prismaAdapter,
+  async createUser(profile) {
+    if (!profile?.email) {
+      throw new Error("Google profile did not return an email address.")
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: profile.email },
+    })
+
+    if (existingUser) {
+      return {
+        id: existingUser.id,
+        email: existingUser.email,
+        emailVerified: null,
+        name: existingUser.username,
+        image: existingUser.image ?? null,
+        role: existingUser.role,
+      }
+    }
+
+    const image = (profile as Record<string, unknown>).image ?? (profile as Record<string, unknown>).picture ?? null
+
+    const baseName =
+      (profile as Record<string, unknown>).username ??
+      profile.name ??
+      (typeof profile.email === "string" ? profile.email.split("@")[0] : "") ??
+      `Trader ${Date.now().toString().slice(-6)}`
+
+    const username = await generateUniqueUsername(String(baseName))
+
+    const user = await prisma.user.create({
+      data: {
+        email: profile.email,
+        username,
+        image: typeof image === "string" ? image : null,
+        role: "USER",
+      },
+    })
+
+    const emailVerified =
+      profile.emailVerified instanceof Date
+        ? profile.emailVerified
+        : typeof profile.emailVerified === "string"
+          ? new Date(profile.emailVerified)
+          : null
+
+    return {
+      id: user.id,
+      email: user.email,
+      emailVerified,
+      name: user.username,
+      image: user.image ?? null,
+      role: user.role,
+    }
+  },
+}
+
 export const authOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,

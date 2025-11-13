@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback, Fragment } from "react"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -147,6 +147,84 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
             messages.map((message) => {
               const isOwnMessage = message.sender.role === "TRADER"
               
+              const renderMessageContent = (content: string) => {
+                const lines = content.split("\n")
+
+                const LINK_SPLIT_REGEX =
+                  /(https?:\/\/[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\+?\d[\d\s\-]{7,}\d))/g
+                const urlRegex = /^https?:\/\/[^\s]+$/i
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i
+                const phoneRegex = /^\+?\d[\d\s\-]{7,}\d$/
+
+                const renderTokens = (text: string) => {
+                  const tokens = text.split(LINK_SPLIT_REGEX).filter((token) => token !== undefined && token !== "")
+
+                  return tokens.map((token, idx) => {
+                    if (urlRegex.test(token)) {
+                      return (
+                        <a
+                          key={`url-${token}-${idx}`}
+                          href={token}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
+                        >
+                          {token}
+                        </a>
+                      )
+                    }
+
+                    if (emailRegex.test(token)) {
+                      return (
+                        <a
+                          key={`email-${token}-${idx}`}
+                          href={`mailto:${token}`}
+                          className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
+                        >
+                          {token}
+                        </a>
+                      )
+                    }
+
+                    if (phoneRegex.test(token)) {
+                      const telValue = token.replace(/[^\d+]/g, "")
+                      return (
+                        <a
+                          key={`phone-${token}-${idx}`}
+                          href={`tel:${telValue}`}
+                          className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
+                        >
+                          {token}
+                        </a>
+                      )
+                    }
+
+                    return <Fragment key={`token-${token}-${idx}`}>{token}</Fragment>
+                  })
+                }
+
+                return lines.map((line, index) => {
+                  const trimmed = line.trim()
+
+                  if (trimmed.length === 0) {
+                    return <div key={`line-${index}`} className="h-2" aria-hidden="true" />
+                  }
+
+                  const isBullet = trimmed.startsWith("•")
+                  const lineContent = isBullet ? trimmed.slice(1).trim() : line.trim()
+
+                  return (
+                    <div
+                      key={`line-${index}`}
+                      className={`text-sm leading-5 ${isBullet ? "flex items-start gap-2 text-left" : "text-left"}`}
+                    >
+                      {isBullet ? <span className="mt-1 text-yellow-300">•</span> : null}
+                      <span className="whitespace-pre-wrap break-words">{renderTokens(lineContent)}</span>
+                    </div>
+                  )
+                })
+              }
+
               return (
                 <div
                   key={message.id}
@@ -172,7 +250,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
                             : 'bg-gray-800 text-white border border-gray-700'
                         }`}
                       >
-                        <p className="text-sm">{message.content}</p>
+                        <div className="space-y-1">{renderMessageContent(message.content)}</div>
                       </div>
                       
                       <div className={`flex items-center space-x-1 mt-1 ${
