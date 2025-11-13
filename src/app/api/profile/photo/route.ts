@@ -1,3 +1,4 @@
+import type { Session } from "next-auth"
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
@@ -16,19 +17,51 @@ function isVercelBlobUrl(url: string | null | undefined): url is string {
   }
 }
 
+async function deleteBlobByUrl(url: string) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return
+  }
+
+  try {
+    await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN })
+  } catch (error) {
+    console.error("Failed to delete previous profile image from blob:", error)
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user?: Session["user"] & { id?: string | null }
+    }) | null
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { imageUrl } = await request.json()
+    let body: unknown = null
+    try {
+      body = await request.json()
+    } catch (parseError) {
+      console.error("Failed to parse request body for profile photo update:", parseError)
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+    }
 
-    if (imageUrl !== null && typeof imageUrl !== "string") {
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Request body must be an object with imageUrl" }, { status: 400 })
+    }
+
+    const maybeImageUrl =
+      (body as { imageUrl?: unknown }).imageUrl ?? (body as { image_url?: unknown }).image_url
+
+    if (maybeImageUrl !== null && typeof maybeImageUrl !== "string") {
       return NextResponse.json({ error: "Invalid image URL" }, { status: 400 })
     }
+
+    const imageUrl =
+      typeof maybeImageUrl === "string" && maybeImageUrl.trim().length > 0
+        ? maybeImageUrl.trim()
+        : null
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -41,6 +74,10 @@ export async function PATCH(request: NextRequest) {
 
     const previousImageUrl = user.image ?? null
 
+    if (previousImageUrl === imageUrl) {
+      return NextResponse.json({ success: true, imageUrl })
+    }
+
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -48,23 +85,20 @@ export async function PATCH(request: NextRequest) {
       },
     })
 
-    if (
-      previousImageUrl &&
-      previousImageUrl !== imageUrl &&
-      isVercelBlobUrl(previousImageUrl) &&
-      process.env.BLOB_READ_WRITE_TOKEN
-    ) {
-      try {
-        await del(previousImageUrl, { token: process.env.BLOB_READ_WRITE_TOKEN })
-      } catch (error) {
-        console.error("Failed to delete previous profile image from blob:", error)
-      }
+    if (previousImageUrl && previousImageUrl !== imageUrl && isVercelBlobUrl(previousImageUrl)) {
+      await deleteBlobByUrl(previousImageUrl)
     }
 
     return NextResponse.json({ success: true, imageUrl })
   } catch (error) {
     console.error("Error updating profile photo:", error)
-    return NextResponse.json({ error: "Failed to update profile photo" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Failed to update profile photo",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    )
   }
 }
 
