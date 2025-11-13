@@ -6,16 +6,16 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CreateVideoForm } from "@/components/create-video-form"
 import { VideoModal } from "@/components/video-modal"
-import { Plus, Play, Trash2 } from "lucide-react"
+import { Plus, Play, Trash2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { motion } from "framer-motion"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 
 interface TradingVideo {
   id: string
   title: string
   youtubeUrl: string
   description: string
-  performanceMetrics?: Record<string, unknown>
   createdAt: string
 }
 
@@ -25,6 +25,12 @@ export function VideoManager() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<TradingVideo | null>(null)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<{
+    type: "delete"
+    videoId: string
+    title: string
+  } | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     fetchVideos()
@@ -49,22 +55,33 @@ export function VideoManager() {
     setIsVideoModalOpen(true)
   }
 
-  const handleDeleteVideo = async (videoId: string) => {
-    if (!confirm('Are you sure you want to delete this video?')) return
+  const requestDeleteVideo = (video: TradingVideo) => {
+    setPendingAction({
+      type: "delete",
+      videoId: video.id,
+      title: video.title,
+    })
+  }
 
+  const executePendingAction = async () => {
+    if (!pendingAction) return
+    setActionLoading(true)
     try {
-      const response = await fetch(`/api/videos/${videoId}`, {
-        method: 'DELETE',
+      const response = await fetch(`/api/videos/${pendingAction.videoId}`, {
+        method: "DELETE",
       })
 
       if (response.ok) {
-        toast.success('Video deleted successfully')
+        toast.success("Video deleted successfully")
         fetchVideos()
       } else {
-        toast.error('Failed to delete video')
+        toast.error("Failed to delete video")
       }
     } catch (error) {
-      toast.error('An error occurred')
+      toast.error("An error occurred")
+    } finally {
+      setActionLoading(false)
+      setPendingAction(null)
     }
   }
 
@@ -214,10 +231,15 @@ export function VideoManager() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => handleDeleteVideo(video.id)}
-                          className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400"
+                          onClick={() => requestDeleteVideo(video)}
+                          disabled={actionLoading && pendingAction?.videoId === video.id}
+                          className="text-red-600 hover:text-red-700 border-red-300 hover:border-red-400 disabled:text-red-400"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          {actionLoading && pendingAction?.videoId === video.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3 h-3" />
+                          )}
                         </Button>
                       </motion.div>
                     </div>
@@ -237,6 +259,18 @@ export function VideoManager() {
           setIsVideoModalOpen(false)
           setSelectedVideo(null)
         }}
+      />
+
+      <ConfirmDialog
+        open={!!pendingAction}
+        title="Delete Trading Video"
+        description={`Are you sure you want to delete "${pendingAction?.title}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onCancel={() => {
+          if (!actionLoading) setPendingAction(null)
+        }}
+        onConfirm={executePendingAction}
+        isLoading={actionLoading}
       />
     </div>
   )

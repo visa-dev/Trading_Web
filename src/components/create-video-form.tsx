@@ -15,8 +15,7 @@ export function CreateVideoForm({ onSuccess }: CreateVideoFormProps) {
   const [formData, setFormData] = useState({
     title: "",
     youtubeUrl: "",
-    description: "",
-    performanceMetrics: ""
+    description: ""
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -30,10 +29,7 @@ export function CreateVideoForm({ onSuccess }: CreateVideoFormProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          performanceMetrics: formData.performanceMetrics ? JSON.parse(formData.performanceMetrics) : null,
-        }),
+        body: JSON.stringify(formData),
       })
 
       if (response.ok) {
@@ -91,20 +87,6 @@ export function CreateVideoForm({ onSuccess }: CreateVideoFormProps) {
           rows={4}
           required
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="performanceMetrics">Performance Metrics (JSON format, optional)</Label>
-        <Textarea
-          id="performanceMetrics"
-          value={formData.performanceMetrics}
-          onChange={(e) => handleInputChange('performanceMetrics', e.target.value)}
-          placeholder='{"winRate": "75%", "averageProfit": "$120", "maxDrawdown": "3.2%"}'
-          rows={3}
-        />
-        <p className="text-xs text-gray-500">
-          Enter performance metrics in JSON format. Example: {`{"winRate": "75%", "averageProfit": "$120"}`}
-        </p>
       </div>
 
       <div className="flex justify-end space-x-4">

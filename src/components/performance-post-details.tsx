@@ -12,11 +12,12 @@ import { useState, useEffect } from "react"
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  type: "PERFORMANCE" | "ANALYTICS"
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   createdAt: Date
@@ -30,6 +31,7 @@ interface PerformancePostDetailsProps {
 export function PerformancePostDetails({ post, activeTab }: PerformancePostDetailsProps) {
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const isPerformance = post.type === "PERFORMANCE"
 
   useEffect(() => {
     // Simulate loading for better UX
@@ -47,20 +49,85 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
       </div>
     )
   }
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
+  const formatCurrency = (amount?: number | null) => {
+    if (typeof amount === "number" && Number.isFinite(amount)) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount)
+    }
+    return "N/A"
   }
 
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`
+  const formatPercentage = (value?: number | null) => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return `${value.toFixed(1)}%`
+    }
+    return "N/A"
   }
 
-  const isProfitable = post.profitLoss > 0
+const getYouTubeVideoId = (url: string) => {
+  if (!url) return null
+  const patterns = [
+    /youtu\.be\/([^?&#]+)/,
+    /youtube\.com\/embed\/([^?&#]+)/,
+    /youtube\.com\/watch\?v=([^?&#]+)/,
+    /youtube\.com\/shorts\/([^?&#]+)/,
+    /youtube\.com\/live\/([^?&#]+)/,
+  ]
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern)
+    if (match?.[1]) {
+      return match[1]
+    }
+  }
+  return null
+}
+
+const getEmbeddedVideoUrl = (url: string | null | undefined) => {
+  if (!url) return null
+  const videoId = getYouTubeVideoId(url)
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}`
+  }
+  return url
+}
+
+  const hasProfitLoss = isPerformance && typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
+  const profitLossValue = hasProfitLoss ? post.profitLoss! : null
+  const isProfitable = hasProfitLoss && (profitLossValue ?? 0) > 0
+  const winRateValue = isPerformance && typeof post.winRate === "number" && Number.isFinite(post.winRate) ? post.winRate : null
+  const drawdownValue = isPerformance && typeof post.drawdown === "number" && Number.isFinite(post.drawdown) ? post.drawdown : null
+  const riskRewardValue = isPerformance && typeof post.riskReward === "number" && Number.isFinite(post.riskReward) ? post.riskReward : null
+
+  const profitLossDisplay = formatCurrency(profitLossValue)
+  const winRateDisplay = formatPercentage(winRateValue)
+  const drawdownDisplay = formatPercentage(drawdownValue)
+  const riskRewardDisplay = typeof riskRewardValue === "number" ? riskRewardValue.toFixed(2) : "N/A"
+  const descriptionText = post.description?.trim() || "No description provided."
+  const profitBadgeClasses = isPerformance
+    ? (hasProfitLoss
+        ? (isProfitable
+            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+            : "bg-gradient-to-r from-red-500 to-pink-500 text-white")
+        : "bg-gradient-to-r from-slate-600 to-slate-700 text-white/80")
+    : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+  const profitCardClasses = isPerformance
+    ? (hasProfitLoss
+        ? (isProfitable
+            ? "bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20"
+            : "bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20")
+        : "bg-gradient-to-br from-slate-600/10 to-slate-700/10 border-slate-500/20")
+    : "bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20"
+  const profitTextColor = isPerformance
+    ? (hasProfitLoss
+        ? (isProfitable ? "text-green-400" : "text-red-400")
+        : "text-gray-400")
+    : "text-blue-300"
+  const embeddedVideoUrl = getEmbeddedVideoUrl(post.videoUrl)
 
   return (
     <motion.div
@@ -138,17 +205,30 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
-                <Badge 
-                  variant={isProfitable ? "default" : "destructive"} 
-                  className="text-lg px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-lg"
-                >
-                  {isProfitable ? (
-                    <TrendingUp className="w-5 h-5 mr-2" />
-                  ) : (
-                    <TrendingDown className="w-5 h-5 mr-2" />
-                  )}
-                  {formatCurrency(post.profitLoss)}
-                </Badge>
+                <div className="flex flex-col items-end space-y-2">
+                  <Badge 
+                    variant={isPerformance ? (hasProfitLoss ? (isProfitable ? "default" : "destructive") : "secondary") : "default"} 
+                    className={`text-lg px-6 py-3 ${profitBadgeClasses} border-0 shadow-lg`}
+                  >
+                    {isPerformance ? (
+                      hasProfitLoss ? (
+                        isProfitable ? (
+                          <TrendingUp className="w-5 h-5 mr-2" />
+                        ) : (
+                          <TrendingDown className="w-5 h-5 mr-2" />
+                        )
+                      ) : (
+                        <TrendingUp className="w-5 h-5 mr-2 text-gray-200" />
+                      )
+                    ) : (
+                      <BarChart3 className="w-5 h-5 mr-2" />
+                    )}
+                    {isPerformance ? profitLossDisplay : "Analytics Insight"}
+                  </Badge>
+                  <Badge variant="outline" className="border-blue-400/40 text-blue-200 bg-blue-500/10">
+                    {isPerformance ? "Performance Post" : "Analytics Post"}
+                  </Badge>
+                </div>
               </motion.div>
             </div>
           </CardHeader>
@@ -184,113 +264,136 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
                 <p className="text-lg text-gray-300 leading-relaxed">
-                  {post.description}
+                  {descriptionText}
                 </p>
               </motion.div>
 
               {/* Metrics Grid */}
-              <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 1.0 }}
-              >
-                <motion.div
+              {isPerformance ? (
+                <motion.div 
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1.1 }}
+                  transition={{ duration: 0.6, delay: 1.0 }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.1 }}
+                  >
+                    <Card className="card-material bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20 hover:shadow-lg transition-shadow duration-300">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center space-x-2">
+                          <Target className="w-5 h-5 text-blue-400" />
+                          <CardTitle className="text-sm font-medium text-white">Win Rate</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-blue-400">{winRateDisplay}</div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Percentage of winning trades
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.2 }}
+                  >
+                    <Card className="card-material bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 hover:shadow-lg transition-shadow duration-300">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center space-x-2">
+                          <Shield className="w-5 h-5 text-green-400" />
+                          <CardTitle className="text-sm font-medium text-white">Risk/Reward</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-green-400">{riskRewardDisplay}</div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Risk to reward ratio
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.3 }}
+                  >
+                    <Card className="card-material bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20 hover:shadow-lg transition-shadow duration-300">
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center space-x-2">
+                          <BarChart3 className="w-5 h-5 text-red-400" />
+                          <CardTitle className="text-sm font-medium text-white">Max Drawdown</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold text-red-400">
+                          {drawdownDisplay}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Maximum peak-to-trough decline
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.4 }}
+                  >
+                    <Card className={`card-material hover:shadow-lg transition-shadow duration-300 ${profitCardClasses}`}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center space-x-2">
+                          {hasProfitLoss ? (
+                            isProfitable ? (
+                              <TrendingUp className="w-5 h-5 text-green-400" />
+                            ) : (
+                              <TrendingDown className="w-5 h-5 text-red-400" />
+                            )
+                          ) : (
+                            <TrendingUp className="w-5 h-5 text-gray-400" />
+                          )}
+                          <CardTitle className="text-sm font-medium text-white">P&L</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className={`text-3xl font-bold ${profitTextColor}`}>
+                          {profitLossDisplay}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Total profit/loss
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  className="grid grid-cols-1 gap-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 1.0 }}
                 >
                   <Card className="card-material bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20 hover:shadow-lg transition-shadow duration-300">
                     <CardHeader className="pb-2">
                       <div className="flex items-center space-x-2">
-                        <Target className="w-5 h-5 text-blue-400" />
-                        <CardTitle className="text-sm font-medium text-white">Win Rate</CardTitle>
+                        <BarChart3 className="w-5 h-5 text-blue-400" />
+                        <CardTitle className="text-sm font-medium text-white">Insight Summary</CardTitle>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-3xl font-bold text-blue-400">{formatPercentage(post.winRate)}</div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Percentage of winning trades
+                      <p className="text-sm text-gray-300 leading-relaxed">
+                        Analytics posts focus on strategic explanations, market context, and educational takeaways rather than raw performance metrics.
                       </p>
                     </CardContent>
                   </Card>
                 </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1.2 }}
-                >
-                  <Card className="card-material bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20 hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center space-x-2">
-                        <Shield className="w-5 h-5 text-green-400" />
-                        <CardTitle className="text-sm font-medium text-white">Risk/Reward</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-green-400">{post.riskReward.toFixed(2)}</div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Risk to reward ratio
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1.3 }}
-                >
-                  <Card className="card-material bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20 hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center space-x-2">
-                        <BarChart3 className="w-5 h-5 text-red-400" />
-                        <CardTitle className="text-sm font-medium text-white">Max Drawdown</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-red-400">
-                        {formatPercentage(post.drawdown)}
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Maximum peak-to-trough decline
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 1.4 }}
-                >
-                  <Card className={`card-material hover:shadow-lg transition-shadow duration-300 ${
-                    isProfitable 
-                      ? 'bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20' 
-                      : 'bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20'
-                  }`}>
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center space-x-2">
-                        {isProfitable ? (
-                          <TrendingUp className="w-5 h-5 text-green-400" />
-                        ) : (
-                          <TrendingDown className="w-5 h-5 text-red-400" />
-                        )}
-                        <CardTitle className="text-sm font-medium text-white">P&L</CardTitle>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className={`text-3xl font-bold ${isProfitable ? 'text-green-400' : 'text-red-400'}`}>
-                        {formatCurrency(post.profitLoss)}
-                      </div>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Total profit/loss
-                      </p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              </motion.div>
+              )}
 
               {/* Video Section */}
               {post.videoUrl && (
@@ -300,12 +403,20 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 1.5 }}
                 >
-                  <iframe
-                    src={post.videoUrl}
-                    title={post.title}
-                    className="w-full h-full"
-                    allowFullScreen
-                  />
+          {embeddedVideoUrl ? (
+            <iframe
+              src={embeddedVideoUrl}
+              title={post.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              sandbox="allow-scripts allow-same-origin allow-presentation"
+              allowFullScreen
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-900 flex items-center justify-center text-gray-400 text-sm">
+              Unable to load video. Please check the link.
+            </div>
+          )}
                 </motion.div>
               )}
             </motion.div>

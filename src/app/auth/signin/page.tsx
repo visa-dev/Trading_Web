@@ -74,7 +74,7 @@ export default function SignInPage() {
     {
       icon: Shield,
       title: "Advanced Risk Management",
-      description: "AI-powered risk controls and analytics"
+      description: "Signal-driven risk controls and analytics"
     },
     {
       icon: BarChart3,
@@ -143,7 +143,7 @@ export default function SignInPage() {
                   Trading Platform
                 </h1>
                 <p className="text-xl text-gray-300">
-                  Access professional trading insights and AI-powered analytics
+                  Access professional trading insights and signal-driven analytics
                 </p>
               </motion.div>
 

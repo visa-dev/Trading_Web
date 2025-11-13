@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { LoadingSpinner } from "@/components/loading-spinner"
 
 interface Review {
   id: string
@@ -101,7 +102,7 @@ export function ReviewsCarousel({ reviews: propReviews }: ReviewsCarouselProps) 
 
       if (response.ok) {
         const data = await response.json()
-        toast.success("Review submitted successfully! It will be visible after approval.")
+        toast.success("Your review will be added shortly.")
         setIsDialogOpen(false)
         setComment("")
         setRating(5)
@@ -186,8 +187,9 @@ export function ReviewsCarousel({ reviews: propReviews }: ReviewsCarouselProps) 
         {/* Reviews Grid - Display 6 initially */}
         {loading ? (
           <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
-            <p className="text-gray-300">Loading reviews...</p>
+            <div className="flex items-center justify-center">
+              <LoadingSpinner message="Loading reviews..." />
+            </div>
           </div>
         ) : visibleReviews.length === 0 ? (
           <div className="text-center py-16">

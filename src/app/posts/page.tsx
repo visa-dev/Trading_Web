@@ -14,11 +14,12 @@ import { Badge } from "@/components/ui/badge"
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  type: "PERFORMANCE" | "ANALYTICS"
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   published: boolean
@@ -40,16 +41,12 @@ export default function PostsPage() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/posts?published=true')
+      const response = await fetch('/api/posts?published=true&type=PERFORMANCE')
       if (response.ok) {
         const data = await response.json()
-        console.log('API Response:', data)
-        
-        // Handle both response formats: {posts: [...]} or [...]
-        const postsArray = Array.isArray(data) ? data : (data.posts || [])
-        console.log('Posts fetched:', postsArray.length, 'posts')
-        console.log('First post:', postsArray[0])
-        setPosts(postsArray)
+        const postsArray: PerformancePost[] = Array.isArray(data) ? data : (data.posts || [])
+        const performancePosts = postsArray.filter((post) => post.type === "PERFORMANCE")
+        setPosts(performancePosts)
       }
     } catch (error) {
       console.error('Error fetching performance posts:', error)
@@ -58,9 +55,13 @@ export default function PostsPage() {
     }
   }
 
+  const searchLower = searchTerm.toLowerCase()
+
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const descriptionText = (post.description || "").toLowerCase()
+    const matchesSearch =
+      post.title.toLowerCase().includes(searchLower) ||
+      descriptionText.includes(searchLower)
 
     if (filterPeriod === "all") return matchesSearch
     
@@ -80,15 +81,30 @@ export default function PostsPage() {
     }
   })
 
-  console.log('Filtered posts:', filteredPosts.length, 'out of', posts.length, 'total posts')
-
   const getPerformanceStats = () => {
-    if (posts.length === 0) return { totalTrades: 0, avgWinRate: 0, totalProfit: 0 }
-    
-    const totalTrades = posts.length
-    const avgWinRate = posts.reduce((sum, post) => sum + post.winRate, 0) / totalTrades
-    const totalProfit = posts.reduce((sum, post) => sum + post.profitLoss, 0)
-    
+    const performanceOnly = posts
+
+    if (performanceOnly.length === 0) {
+      return { totalTrades: 0, avgWinRate: 0, totalProfit: 0 }
+    }
+
+    const totalTrades = performanceOnly.length
+
+    const winRateValues = performanceOnly
+      .map((post) => (typeof post.winRate === "number" && Number.isFinite(post.winRate) ? post.winRate : null))
+      .filter((value): value is number => value !== null)
+
+    const avgWinRate = winRateValues.length
+      ? winRateValues.reduce((sum, value) => sum + value, 0) / winRateValues.length
+      : 0
+
+    const totalProfit = performanceOnly.reduce((sum, post) => {
+      const value = typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
+        ? post.profitLoss
+        : 0
+      return sum + value
+    }, 0)
+
     return { totalTrades, avgWinRate, totalProfit }
   }
 
@@ -232,11 +248,6 @@ export default function PostsPage() {
           </motion.div>
         ) : filteredPosts.length > 0 ? (
           <>
-            <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-white">
-                Debug: Rendering {filteredPosts.length} posts
-              </p>
-            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredPosts.map((post, index) => (
                 <motion.div

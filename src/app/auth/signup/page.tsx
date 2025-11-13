@@ -1,16 +1,31 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { motion } from "framer-motion"
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, TrendingUp, Shield, BarChart3, User, CheckCircle } from "lucide-react"
+import Cropper, { Area } from "react-easy-crop"
+import {
+  ArrowLeft,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  TrendingUp,
+  Shield,
+  BarChart3,
+  User,
+  CheckCircle,
+  Trash
+} from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { getCroppedImage } from "@/lib/crop-image"
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -24,15 +39,108 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
+
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [avatarCropOpen, setAvatarCropOpen] = useState(false)
+  const [avatarCropSrc, setAvatarCropSrc] = useState<string | null>(null)
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null)
+  const [avatarCrop, setAvatarCrop] = useState({ x: 0, y: 0 })
+  const [avatarZoom, setAvatarZoom] = useState(1)
+  const [avatarCroppedAreaPixels, setAvatarCroppedAreaPixels] = useState<Area | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview)
+      }
+      if (avatarCropSrc && avatarCropSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarCropSrc)
+      }
+    }
+  }, [avatarPreview, avatarCropSrc])
   const router = useRouter()
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null
+    event.target.value = ""
+
+    if (!file) {
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+    setPendingAvatarFile(file)
+    setAvatarCropSrc(objectUrl)
+    setAvatarCrop({ x: 0, y: 0 })
+    setAvatarZoom(1)
+    setAvatarCroppedAreaPixels(null)
+    setAvatarCropOpen(true)
+  }
+
+  const onAvatarCropComplete = useCallback((_: Area, croppedPixels: Area) => {
+    setAvatarCroppedAreaPixels(croppedPixels)
+  }, [])
+
+  const closeAvatarCrop = () => {
+    setAvatarCropOpen(false)
+    if (avatarCropSrc && avatarCropSrc.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarCropSrc)
+    }
+    setAvatarCropSrc(null)
+    setPendingAvatarFile(null)
+    setAvatarCroppedAreaPixels(null)
+  }
+
+  const applyAvatarCrop = async () => {
+    if (!avatarCropSrc || !pendingAvatarFile || !avatarCroppedAreaPixels) {
+      toast.error("Select and crop a profile image")
+      return
+    }
+
+    try {
+      const blob = await getCroppedImage(avatarCropSrc, avatarCroppedAreaPixels)
+      const fileName = pendingAvatarFile.name || `profile-${Date.now()}.jpg`
+      const croppedFile = new File([blob], fileName, { type: blob.type || pendingAvatarFile.type || "image/jpeg" })
+
+      const preview = URL.createObjectURL(blob)
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview)
+      }
+      setAvatarPreview(preview)
+      setAvatarFile(croppedFile)
+      toast.success("Profile image ready")
+    } catch (error) {
+      console.error(error)
+      toast.error("Failed to crop image")
+    } finally {
+      closeAvatarCrop()
+    }
+  }
+
+  const removeAvatar = () => {
+    if (avatarPreview && avatarPreview.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarPreview)
+    }
+    if (avatarCropSrc && avatarCropSrc.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarCropSrc)
+    }
+    setAvatarPreview(null)
+    setAvatarFile(null)
+    setAvatarCropSrc(null)
+    setPendingAvatarFile(null)
+    setAvatarCroppedAreaPixels(null)
+  }
+
+  const avatarDisplay = useMemo(() => avatarPreview ?? null, [avatarPreview])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match")
       return
@@ -43,16 +151,79 @@ export default function SignUpPage() {
       return
     }
 
+    const normalizedEmail = formData.email.trim().toLowerCase()
+    const trimmedName = formData.name.trim()
+
     setIsLoading(true)
 
     try {
-      // Here you would typically make an API call to create the user account
-      // For now, we'll simulate the process
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      toast.success("Account created successfully! Please sign in.")
-      router.push("/auth/signin")
-    } catch {
+      let avatarUrl: string | null = null
+
+      if (avatarFile) {
+        const uploadFormData = new FormData()
+        uploadFormData.append("file", avatarFile)
+        uploadFormData.append("folder", "profile-images")
+        uploadFormData.append("allowGuest", "true")
+
+        const uploadResponse = await fetch("/api/uploads", {
+          method: "POST",
+          body: uploadFormData,
+        })
+
+        if (!uploadResponse.ok) {
+          const uploadError = await uploadResponse.json().catch(() => ({}))
+          toast.error(uploadError?.error ?? "Failed to upload profile image.")
+          return
+        }
+
+        const uploadJson = await uploadResponse.json()
+        avatarUrl = typeof uploadJson?.url === "string" ? uploadJson.url : null
+      }
+
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: trimmedName,
+          email: normalizedEmail,
+          password: formData.password,
+          imageUrl: avatarUrl,
+        }),
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        toast.error(data?.error ?? "Failed to create account. Please try again.")
+        return
+      }
+
+      toast.success("Account created successfully!")
+
+      const signInResult = await signIn("credentials", {
+        redirect: false,
+        email: normalizedEmail,
+        password: formData.password,
+      })
+
+      if (signInResult?.error) {
+        toast.info("Account created. Please sign in with your credentials.")
+        router.push("/auth/signin")
+      } else {
+        router.push("/")
+      }
+
+      removeAvatar()
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      })
+    } catch (error) {
+      console.error("Error registering user:", error)
       toast.error("Failed to create account. Please try again.")
     } finally {
       setIsLoading(false)
@@ -79,7 +250,7 @@ export default function SignUpPage() {
     {
       icon: Shield,
       title: "Advanced Risk Management",
-      description: "AI-powered risk controls and analytics"
+      description: "Signal-driven risk controls and analytics"
     },
     {
       icon: BarChart3,
@@ -225,6 +396,37 @@ export default function SignUpPage() {
                 {/* Registration Form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
+                    <Label className="text-white">Profile Image</Label>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center overflow-hidden">
+                        {avatarDisplay ? (
+                          <img src={avatarDisplay} alt="Profile preview" className="w-16 h-16 object-cover" />
+                        ) : (
+                          <User className="w-8 h-8 text-gray-900" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <Input type="file" accept="image/*" onChange={handleAvatarChange} />
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={removeAvatar}
+                            disabled={!avatarPreview}
+                            className="flex items-center space-x-2"
+                          >
+                            <Trash className="w-4 h-4" />
+                            <span>Remove Selected</span>
+                          </Button>
+                        </div>
+                        <p className="text-xs text-gray-400">
+                          Upload a square image (recommended 400x400). You can crop after selecting.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="name" className="text-white">Full Name</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -351,6 +553,50 @@ export default function SignUpPage() {
           </motion.div>
         </div>
       </div>
+
+      <Dialog open={avatarCropOpen} onOpenChange={(open) => (!open ? closeAvatarCrop() : setAvatarCropOpen(true))}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Crop Profile Image</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-80 bg-gray-900 rounded-lg overflow-hidden">
+            {avatarCropSrc && (
+              <Cropper
+                image={avatarCropSrc}
+                crop={avatarCrop}
+                zoom={avatarZoom}
+                aspect={1}
+                onCropChange={setAvatarCrop}
+                onZoomChange={setAvatarZoom}
+                onCropComplete={onAvatarCropComplete}
+              />
+            )}
+          </div>
+          <div className="mt-4">
+            <label htmlFor="avatarZoomRange" className="text-sm text-gray-400 mb-2 block">
+              Zoom
+            </label>
+            <input
+              id="avatarZoomRange"
+              type="range"
+              min={1}
+              max={3}
+              step={0.1}
+              value={avatarZoom}
+              onChange={(event) => setAvatarZoom(Number(event.target.value))}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter className="flex justify-end space-x-3">
+            <Button type="button" variant="outline" onClick={closeAvatarCrop}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={applyAvatarCrop}>
+              Apply Crop
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

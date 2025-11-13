@@ -1,33 +1,154 @@
 "use client"
 
+import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { TrendingUp, BarChart3, Shield, Target, ArrowRight, Zap, Star, Sparkles, Rocket, CheckCircle, Award, Users, Calendar } from "lucide-react"
-import { 
-  pageVariants, 
-  pageTransition, 
+import {
+  pageVariants,
+  pageTransition,
   containerVariants,
   itemVariants,
-  textRevealVariants,
   scaleBounceVariants,
-  floatVariants
+  floatVariants,
 } from "@/lib/animations"
+import { SiFacebook, SiTelegram, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
 
-import profile from '@/assets/profile.jpg'
+import profile from "@/assets/profile.jpg"
+
+type TraderStats = {
+  totalPerformancePosts: number
+  totalAnalyticsPosts: number
+  totalVideos: number
+  totalTraderReviews: number
+  averageTraderRating: number
+  averageWinRate: number
+  averageDrawdown: number
+  averageRiskReward: number
+  averageProfitLoss: number
+} | null
+
+const formatPercent = (value?: number | null, fractionDigits = 1) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "N/A"
+  return `${value.toFixed(fractionDigits)}%`
+}
+
+const formatRatio = (value?: number | null, fractionDigits = 2) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "N/A"
+  return value.toFixed(fractionDigits)
+}
+
+const formatNumber = (value?: number | null) => {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "0"
+  return new Intl.NumberFormat().format(value)
+}
 
 export function Hero() {
-  const achievements = [
-    { icon: TrendingUp, value: "94%", label: "Win Rate", color: "text-green-400" },
-    { icon: BarChart3, value: "127", label: "Total Trades", color: "text-blue-400" },
-    { icon: Shield, value: "3.8%", label: "Max Drawdown", color: "text-yellow-400" },
-    { icon: Target, value: "2.4", label: "Risk/Reward", color: "text-purple-400" }
-  ]
+  const [stats, setStats] = useState<TraderStats>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/trader/profile", { cache: "no-store" })
+        if (!response.ok) {
+          throw new Error("Failed to fetch trader stats")
+        }
+        const data = await response.json()
+        if (isMounted && data?.stats) {
+          setStats(data.stats as TraderStats)
+        }
+      } catch (error) {
+        console.error("Failed to load trader stats:", error)
+      }
+    }
+
+    fetchStats()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  const achievements = useMemo(() => {
+    if (!stats) {
+      return [
+        { icon: TrendingUp, value: "N/A", label: "Win Rate", color: "text-green-400" },
+        { icon: BarChart3, value: "0", label: "Total Posts", color: "text-blue-400" },
+        { icon: Shield, value: "N/A", label: "Max Drawdown", color: "text-yellow-400" },
+        { icon: Target, value: "N/A", label: "Risk/Reward", color: "text-purple-400" },
+      ]
+    }
+
+    const totalPosts = stats.totalPerformancePosts + stats.totalAnalyticsPosts
+
+    return [
+      {
+        icon: TrendingUp,
+        value: formatPercent(stats.averageWinRate),
+        label: "Win Rate",
+        color: "text-green-400",
+      },
+      {
+        icon: BarChart3,
+        value: formatNumber(totalPosts),
+        label: "Total Posts",
+        color: "text-blue-400",
+      },
+      {
+        icon: Shield,
+        value: formatPercent(stats.averageDrawdown),
+        label: "Max Drawdown",
+        color: "text-yellow-400",
+      },
+      {
+        icon: Target,
+        value: formatRatio(stats.averageRiskReward),
+        label: "Risk/Reward",
+        color: "text-purple-400",
+      },
+    ]
+  }, [stats])
 
   const personalInfo = [
     { icon: Calendar, text: "10+ Years Experience", color: "text-yellow-400" },
     { icon: Award, text: "Professional Trader", color: "text-blue-400" },
     { icon: Users, text: "500+ Clients Served", color: "text-purple-400" }
+  ]
+
+  const socialLinks = [
+    {
+      href: "https://www.facebook.com/hasakalanka",
+      label: "Facebook",
+      icon: SiFacebook,
+      gradient: "from-blue-500/20 to-sky-500/20"
+    },
+    {
+      href: "https://t.me/athenstrading",
+      label: "Telegram",
+      icon: SiTelegram,
+      gradient: "from-cyan-500/20 to-blue-500/20"
+    },
+    {
+      href: "https://www.tiktok.com/@saas.me",
+      label: "TikTok",
+      icon: SiTiktok,
+      gradient: "from-pink-500/20 to-purple-500/20"
+    },
+    {
+      href: "https://www.instagram.com/sahan__akalanka",
+      label: "Instagram",
+      icon: SiInstagram,
+      gradient: "from-rose-500/20 to-amber-500/20"
+    },
+    {
+      href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ",
+      label: "YouTube",
+      icon: SiYoutube,
+      gradient: "from-red-500/20 to-orange-500/20"
+    },
   ]
 
   return (
@@ -80,9 +201,9 @@ export function Hero() {
         />
       </div>
 
-      <div className="relative max-w-7xl mx-auto container-responsive section-spacing">
+      <div className="relative max-w-7xl mx-auto container-responsive section-spacing pb-24 lg:pb-32">
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[80vh]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[70vh]">
           
           {/* Left Column - Photo and Personal Information */}
           <motion.div
@@ -96,7 +217,7 @@ export function Hero() {
               className="relative"
               variants={itemVariants}
             >
-              <div className="relative w-80 h-80 mx-auto lg:mx-0">
+              <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-80 lg:h-80 mx-auto lg:mx-0">
                 <motion.div
                   className="w-full h-full rounded-3xl overflow-hidden shadow-2xl"
                   whileHover={{ scale: 1.02 }}
@@ -125,7 +246,7 @@ export function Hero() {
                   transition={{ duration: 3, repeat: Infinity }}
                 >
                   <Award className="w-4 h-4 inline mr-1" />
-                  AI Expert
+                  Signal Expert
                 </motion.div>
               </div>
             </motion.div>
@@ -140,7 +261,7 @@ export function Hero() {
                   Sahan Akalanka
                 </h2>
                 <p className="text-xl text-yellow-400 dark:text-yellow-400 light:text-yellow-600 font-medium">
-                  Professional Trading Expert & AI Analyst
+                  Professional Trading Expert & Market Analyst
                 </p>
               </motion.div>
 
@@ -168,7 +289,7 @@ export function Hero() {
                 className="text-lg text-gray-300 dark:text-gray-300 light:text-navy-700 leading-relaxed"
                 variants={itemVariants}
               >
-                Specialized in Gold & Forex markets with a proven track record of delivering consistent returns through advanced AI-powered trading strategies and institutional-grade risk management.
+                Specialized in Gold & Forex markets with a proven track record of delivering consistent returns through advanced signal-based trading strategies and institutional-grade risk management.
               </motion.p>
             </motion.div>
           </motion.div>
@@ -200,13 +321,13 @@ export function Hero() {
               </h1>
               
               <p className="text-xl text-gray-300 dark:text-gray-300 light:text-navy-700 max-w-lg mx-auto lg:mx-0">
-                Real-time performance metrics from advanced AI-driven trading algorithms
+                Real-time performance metrics from advanced signal-driven trading algorithms
               </p>
             </motion.div>
 
             {/* Performance Stats Grid */}
             <motion.div 
-              className="grid grid-cols-2 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 gap-6"
               variants={containerVariants}
             >
               {achievements.map((stat, index) => (
@@ -220,10 +341,13 @@ export function Hero() {
                   <div className="card-material p-6 text-center hover:border-yellow-400/50 transition-all duration-300">
                     <motion.div
                       className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r ${
-                        stat.label === 'Win Rate' ? 'from-green-500/20 to-emerald-500/20' :
-                        stat.label === 'Total Trades' ? 'from-blue-500/20 to-cyan-500/20' :
-                        stat.label === 'Max Drawdown' ? 'from-yellow-500/20 to-orange-500/20' :
-                        'from-purple-500/20 to-pink-500/20'
+                        stat.label === "Win Rate"
+                          ? "from-green-500/20 to-emerald-500/20"
+                          : stat.label === "Total Posts"
+                          ? "from-blue-500/20 to-cyan-500/20"
+                          : stat.label === "Max Drawdown"
+                          ? "from-yellow-500/20 to-orange-500/20"
+                          : "from-purple-500/20 to-pink-500/20"
                       } flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}
                       variants={scaleBounceVariants}
                       initial="hidden"
@@ -257,26 +381,26 @@ export function Hero() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Button asChild size="lg" className="btn-material text-lg px-8 py-4">
-                  <Link href="/posts" className="flex items-center">
+                  <Link href="/account-management" className="flex items-center">
                     <Rocket className="w-5 h-5 mr-2" />
-                    View Performance
+                    Account Management
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Link>
                 </Button>
               </motion.div>
               
               <motion.div
-                variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Button asChild size="lg" variant="outline" className="btn-material-outline text-lg px-8 py-4">
-                  <Link href="/auth/signin" className="flex items-center">
-                    <Zap className="w-5 h-5 mr-2" />
-                    Start Trading
-                  </Link>
-                </Button>
-              </motion.div>
+              variants={itemVariants}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button asChild size="lg" variant="outline" className="btn-material-outline text-lg px-8 py-4">
+                <Link href="/copy-trading" className="flex items-center">
+                  <Zap className="w-5 h-5 mr-2" />
+                  Copy Trading
+                </Link>
+              </Button>
+            </motion.div>
             </motion.div>
           </motion.div>
         </div>
@@ -301,6 +425,30 @@ export function Hero() {
             className="w-1 h-3 bg-gradient-to-b from-yellow-400 to-orange-400 rounded-full mt-2"
           />
         </motion.div>
+      </motion.div>
+
+      {/* Floating Social Links */}
+      <motion.div
+        className="hidden xl:flex flex-col gap-4 absolute top-32 right-10 z-30"
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.6, duration: 0.6 }}
+      >
+        {socialLinks.map((social, index) => (
+          <motion.a
+            key={social.href}
+            href={social.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.1, x: -8 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className={`p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-yellow-400/60 backdrop-blur-sm shadow-lg group transition-colors duration-300 bg-gradient-to-br ${social.gradient}`}
+            aria-label={social.label}
+          >
+            <social.icon className="w-5 h-5 text-gray-200 group-hover:text-white transition-colors duration-300" />
+          </motion.a>
+        ))}
       </motion.div>
     </motion.div>
   )

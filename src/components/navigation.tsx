@@ -1,6 +1,7 @@
 "use client"
 
 import { useSession, signOut } from "next-auth/react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -12,13 +13,34 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Phone, Copy } from "lucide-react"
+import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Copy, Shield } from "lucide-react"
 import Link from "next/link"
 
 export function Navigation() {
   const { data: session, status } = useSession()
+  const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const sessionRole = (session?.user as { role?: string } | undefined)?.role ?? null
+
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === href
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  const desktopNavClasses = (href: string) =>
+    `group relative flex items-center space-x-2 text-sm font-medium transition-colors duration-300 ${
+      isActive(href) ? "text-yellow-400" : "text-white hover:text-yellow-400"
+    } after:absolute after:-bottom-2 after:left-0 after:h-0.5 after:w-full after:origin-left after:scale-x-0 after:rounded-full after:bg-yellow-400 after:transition-transform after:duration-300 group-hover:after:scale-x-100 ${
+      isActive(href) ? "after:scale-x-100" : "after:scale-x-0"
+    }`
+
+  const mobileNavClasses = (href: string) =>
+    `group flex items-center space-x-3 text-white transition-colors duration-300 py-2 ${
+      isActive(href) ? "text-yellow-400" : "hover:text-yellow-400"
+    }`
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,75 +62,80 @@ export function Navigation() {
       transition={{ duration: 0.6, ease: "easeOut" }}
     >
       <div className="max-w-7xl mx-auto container-responsive">
-        <div className="flex justify-between items-center h-20 sm:h-24">
-          {/* Sahan Akalanka Text - No Logo */}
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {session?.user?.role === "TRADER" ? (
-              <button
-                onClick={() => {
-                  if (typeof window !== 'undefined') {
-                    // If on dashboard page, refresh it; otherwise navigate to dashboard
-                    if (window.location.pathname === '/dashboard') {
-                      window.location.reload()
-                    } else {
-                      window.location.href = '/dashboard'
-                    }
-                  }
-                }}
-                className="text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer"
-              >
-                Sahan Akalanka
-              </button>
-            ) : (
-              <Link href="/">
-                <h1 className="text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer">
-                  Sahan Akalanka
-                </h1>
-              </Link>
-            )}
-          </motion.div>
-
-          {/* Center Navigation - For all users except traders */}
-          {!session || session.user?.role !== "TRADER" ? (
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/posts" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
-                <TrendingUp className="w-5 h-5" />
-                <span className="font-medium">Performance</span>
-              </Link>
-              <Link href="/academy" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
-                <GraduationCap className="w-5 h-5" />
-                <span className="font-medium">Academy</span>
-              </Link>
-              <Link href="/copy-trading" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
-                <Copy className="w-5 h-5" />
-                <span className="font-medium">Copy Trading</span>
-              </Link>
-              <Link href="/contact" className="flex items-center space-x-2 text-white hover:text-yellow-400 transition-colors duration-300">
-                <Phone className="w-5 h-5" />
-                <span className="font-medium">Contact Us</span>
-              </Link>
-            </div>
-          ) : null}
-
-          {/* Mobile Menu Button - For all users except traders */}
-          {!session || session.user?.role !== "TRADER" ? (
-            <div className="md:hidden">
+        <div className="flex items-center h-20 sm:h-24">
+          {/* Mobile: Hamburger + Centered Brand */}
+          <div className="flex items-center flex-1 md:flex-none md:w-auto">
+            {!session || sessionRole !== "TRADER" ? (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-white hover:text-yellow-400"
+                className="md:hidden text-white hover:text-yellow-400"
               >
                 {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </Button>
+            ) : (
+              <span className="md:hidden w-10" />
+            )}
+
+            <motion.div
+              className="flex-1 flex justify-center md:justify-start md:pl-0 pl-2"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {sessionRole === "TRADER" ? (
+                <button
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      if (window.location.pathname === '/dashboard') {
+                        window.location.reload()
+                      } else {
+                        window.location.href = '/dashboard'
+                      }
+                    }
+                  }}
+                  className="text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer"
+                >
+                  Sahan Akalanka
+                </button>
+              ) : (
+                <Link href="/" className="block">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer">
+                    Sahan Akalanka
+                  </h1>
+                </Link>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Desktop Navigation - Center */}
+          {!session || sessionRole !== "TRADER" ? (
+            <div className="hidden md:flex items-center space-x-8 md:mx-10">
+              <Link href="/posts" className={desktopNavClasses("/posts")}>
+                <TrendingUp className="w-5 h-5" />
+                <span className="font-medium">Performance</span>
+              </Link>
+              <Link href="/academy" className={desktopNavClasses("/academy")}>
+                <GraduationCap className="w-5 h-5" />
+                <span className="font-medium">Academy</span>
+              </Link>
+              <Link href="/copy-trading" className={desktopNavClasses("/copy-trading")}>
+                <Copy className="w-5 h-5" />
+                <span className="font-medium">Copy Trading</span>
+              </Link>
+              <Link href="/account-management" className={desktopNavClasses("/account-management")}>
+                <Shield className="w-5 h-5" />
+                <span className="font-medium">Account Management</span>
+              </Link>
+              <Link href="/about" className={desktopNavClasses("/about")}>
+                <User className="w-5 h-5" />
+                <span className="font-medium">About Me</span>
+              </Link>
             </div>
           ) : null}
 
           {/* Right Side: User Avatar */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-none ml-auto">
             {/* User Avatar and Auth */}
             {status === "loading" ? (
               <motion.div 
@@ -139,7 +166,7 @@ export function Navigation() {
                   </motion.div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent 
-                  className="w-64 glass-effect border border-yellow-400/20 shadow-2xl" 
+                  className="w-64 bg-slate-900/95 border border-yellow-400/20 shadow-2xl backdrop-blur-md" 
                   align="end" 
                   forceMount
                 >
@@ -161,25 +188,27 @@ export function Navigation() {
                     </div>
                     <div className="flex items-center justify-center">
                       <div className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        session.user?.role === "TRADER" 
+                        sessionRole === "TRADER" 
                           ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30" 
                           : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                       }`}>
-                        {session.user?.role}
+                        {sessionRole ?? "USER"}
                       </div>
                     </div>
                   </div>
                   <DropdownMenuSeparator className="bg-gray-700" />
                   
                   <div className="py-2">
-                    <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
-                      <Link href="/profile" className="flex items-center space-x-3 px-4 py-2">
-                        <User className="w-4 h-4" />
-                        <span className="text-white">Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    {sessionRole !== "TRADER" && (
+                      <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
+                        <Link href="/profile" className="flex items-center space-x-3 px-4 py-2">
+                          <User className="w-4 h-4" />
+                          <span className="text-white">Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     
-                    {session.user?.role === "TRADER" && (
+                    {sessionRole === "TRADER" && (
                       <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
                         <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-2">
                           <BarChart3 className="w-4 h-4 text-yellow-400" />
@@ -222,7 +251,7 @@ export function Navigation() {
 
       {/* Mobile Navigation Menu */}
       <AnimatePresence>
-        {isMobileMenuOpen && (!session || session.user?.role !== "TRADER") && (
+        {isMobileMenuOpen && (!session || sessionRole !== "TRADER") && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -232,7 +261,7 @@ export function Navigation() {
             <div className="px-4 py-4 space-y-4">
               <Link 
                 href="/posts" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                className={mobileNavClasses("/posts")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <TrendingUp className="w-5 h-5" />
@@ -240,7 +269,7 @@ export function Navigation() {
               </Link>
               <Link 
                 href="/academy" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                className={mobileNavClasses("/academy")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <GraduationCap className="w-5 h-5" />
@@ -248,20 +277,40 @@ export function Navigation() {
               </Link>
               <Link 
                 href="/copy-trading" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                className={mobileNavClasses("/copy-trading")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Copy className="w-5 h-5" />
                 <span className="font-medium">Copy Trading</span>
               </Link>
               <Link 
-                href="/contact" 
-                className="flex items-center space-x-3 text-white hover:text-yellow-400 transition-colors duration-300 py-2"
+                href="/account-management" 
+                className={mobileNavClasses("/account-management")}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Phone className="w-5 h-5" />
-                <span className="font-medium">Contact Us</span>
+                <Shield className="w-5 h-5" />
+                <span className="font-medium">Account Management</span>
               </Link>
+              <Link 
+                href="/about" 
+                className={mobileNavClasses("/about")}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <User className="w-5 h-5" />
+                <span className="font-medium">About Me</span>
+              </Link>
+              {session && (
+                <Button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false)
+                    signOut()
+                  }}
+                  className="w-full btn-material flex items-center justify-center space-x-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign out</span>
+                </Button>
+              )}
             </div>
           </motion.div>
         )}

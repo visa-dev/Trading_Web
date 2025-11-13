@@ -65,10 +65,112 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       return NextResponse.json({ error: "Post not found" }, { status: 404 })
     }
 
+    const normalizeOptionalString = (value: unknown) => {
+      if (typeof value !== "string") return null
+      const trimmed = value.trim()
+      return trimmed.length > 0 ? trimmed : null
+    }
+
+    const parseOptionalNumber = (value: unknown): number | null => {
+      if (value === null || value === undefined || value === "") return null
+      const numeric = typeof value === "number" ? value : Number(value)
+      if (!Number.isFinite(numeric)) {
+        throw new Error("invalid number")
+      }
+      return numeric
+    }
+
+    const {
+      title,
+      description,
+      profitLoss,
+      winRate,
+      drawdown,
+      riskReward,
+      imageUrl,
+      videoUrl,
+      published,
+      type: rawType,
+    } = body ?? {}
+
+    const updateData: Record<string, unknown> = {}
+
+    if (title !== undefined) {
+      if (typeof title !== "string" || !title.trim()) {
+        return NextResponse.json({ error: "Title is required" }, { status: 400 })
+      }
+      updateData.title = title.trim()
+    }
+
+    if (description !== undefined) {
+      updateData.description = normalizeOptionalString(description)
+    }
+
+    if (imageUrl !== undefined) {
+      updateData.imageUrl = normalizeOptionalString(imageUrl)
+    }
+
+    if (videoUrl !== undefined) {
+      updateData.videoUrl = normalizeOptionalString(videoUrl)
+    }
+
+    if (published !== undefined) {
+      updateData.published = Boolean(published)
+    }
+
+    let normalizedType: "PERFORMANCE" | "ANALYTICS" | undefined
+
+    if (rawType !== undefined) {
+      if (rawType === "PERFORMANCE" || rawType === "ANALYTICS") {
+        normalizedType = rawType
+        updateData.type = normalizedType
+      } else {
+        return NextResponse.json({ error: "Invalid post type" }, { status: 400 })
+      }
+    }
+
+    const targetType = normalizedType ?? existingPost.type
+
+    if (targetType === "PERFORMANCE") {
+      try {
+        if (profitLoss !== undefined) {
+          updateData.profitLoss = parseOptionalNumber(profitLoss)
+        }
+        if (winRate !== undefined) {
+          const parsedWinRate = parseOptionalNumber(winRate)
+          if (parsedWinRate !== null && (parsedWinRate < 0 || parsedWinRate > 100)) {
+            return NextResponse.json({ error: "Win rate must be between 0 and 100" }, { status: 400 })
+          }
+          updateData.winRate = parsedWinRate
+        }
+        if (drawdown !== undefined) {
+          const parsedDrawdown = parseOptionalNumber(drawdown)
+          if (parsedDrawdown !== null && (parsedDrawdown < 0 || parsedDrawdown > 100)) {
+            return NextResponse.json({ error: "Drawdown must be between 0 and 100" }, { status: 400 })
+          }
+          updateData.drawdown = parsedDrawdown
+        }
+        if (riskReward !== undefined) {
+          const parsedRiskReward = parseOptionalNumber(riskReward)
+          if (parsedRiskReward !== null && parsedRiskReward < 0) {
+            return NextResponse.json({ error: "Risk/Reward must be zero or greater" }, { status: 400 })
+          }
+          updateData.riskReward = parsedRiskReward
+        }
+      } catch {
+        return NextResponse.json({ error: "Invalid numeric values" }, { status: 400 })
+      }
+    } else {
+      updateData.profitLoss = null
+      updateData.winRate = null
+      updateData.drawdown = null
+      updateData.riskReward = null
+    }
+
     // Update the post
     const post = await prisma.performancePost.update({
       where: { id },
-      data: body
+      data: updateData
     })
 
     return NextResponse.json({ post })

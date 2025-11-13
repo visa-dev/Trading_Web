@@ -50,6 +50,29 @@ export async function GET(
       }
     })
 
+    const viewerIsUser = session.user.id === conversation.userId
+    const viewerIsTrader = session.user.id === conversation.traderId
+
+    if (viewerIsTrader) {
+      await prisma.message.updateMany({
+        where: {
+          conversationId,
+          senderId: conversation.userId,
+          read: false,
+        },
+        data: {
+          read: true,
+        },
+      })
+
+      await prisma.conversation.update({
+        where: { id: conversationId },
+        data: {
+          unreadCount: 0,
+        },
+      })
+    }
+
     return NextResponse.json({ messages })
   } catch (error) {
     console.error("Error fetching messages:", error)
@@ -111,6 +134,8 @@ export async function POST(
     })
 
     // Update conversation with last message and unread count
+    const senderIsUser = session.user.id === conversation.userId
+
     await prisma.conversation.update({
       where: {
         id: conversationId
@@ -118,13 +143,63 @@ export async function POST(
       data: {
         lastMessage: content.trim(),
         updatedAt: new Date(),
-        unreadCount: {
-          increment: session.user.id === conversation.userId ? 0 : 1
-        }
+        unreadCount: senderIsUser ? { increment: 1 } : { set: 0 },
       }
     })
 
-    return NextResponse.json({ message }, { status: 201 })
+    let autoReply: typeof message | null = null
+
+    if (senderIsUser) {
+      const existingTraderReply = await prisma.message.findFirst({
+        where: {
+          conversationId,
+          senderId: conversation.traderId,
+        },
+        select: {
+          id: true,
+        },
+      })
+
+      if (!existingTraderReply && conversation.traderId) {
+        const autoReplyContent = [
+          "Sahan Akalanka will contact you within 24 hours.",
+          "",
+          "For urgent matters you can reach out via:",
+          "• Telegram: https://t.me/athenstrading",
+          "• Facebook: https://www.facebook.com/hasakalanka",
+          "• Instagram: https://www.instagram.com/sahan__akalanka",
+          "• Call / WhatsApp: +94 77 638 7655",
+          "• Email: info@sahanakalanka.com",
+        ].join("\n")
+
+        autoReply = await prisma.message.create({
+          data: {
+            conversationId,
+            senderId: conversation.traderId,
+            content: autoReplyContent,
+          },
+          include: {
+            sender: {
+              select: {
+                username: true,
+                image: true,
+                role: true,
+              },
+            },
+          },
+        })
+
+        await prisma.conversation.update({
+          where: { id: conversationId },
+          data: {
+            lastMessage: autoReplyContent,
+            updatedAt: new Date(),
+          },
+        })
+      }
+    }
+
+    return NextResponse.json({ message, autoReply }, { status: 201 })
   } catch (error) {
     console.error("Error creating message:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

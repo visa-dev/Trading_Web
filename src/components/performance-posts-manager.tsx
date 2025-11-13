@@ -7,17 +7,19 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CreatePostForm } from "@/components/create-post-form"
 import { EditPostForm } from "@/components/edit-post-form"
-import { Plus, Edit, Eye, Trash2, TrendingUp, TrendingDown } from "lucide-react"
+import { Plus, Edit, Eye, Trash2, TrendingUp, TrendingDown, Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 
 interface PerformancePost {
   id: string
   title: string
-  description: string
-  profitLoss: number
-  winRate: number
-  drawdown: number
-  riskReward: number
+  description?: string | null
+  type: "PERFORMANCE" | "ANALYTICS"
+  profitLoss?: number | null
+  winRate?: number | null
+  drawdown?: number | null
+  riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
   published: boolean
@@ -33,6 +35,13 @@ export function PerformancePostsManager() {
   const [loading, setLoading] = useState(true)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [editingPost, setEditingPost] = useState<PerformancePost | null>(null)
+  const [pendingAction, setPendingAction] = useState<{
+    type: "delete" | "toggle"
+    postId: string
+    nextStatus?: boolean
+    title?: string
+  } | null>(null)
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     fetchPosts()
@@ -52,59 +61,81 @@ export function PerformancePostsManager() {
     }
   }
 
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm('Are you sure you want to delete this post?')) return
+  const requestDeletePost = (post: PerformancePost) => {
+    setPendingAction({
+      type: "delete",
+      postId: post.id,
+      title: post.title,
+    })
+  }
 
+  const requestTogglePublish = (post: PerformancePost) => {
+    setPendingAction({
+      type: "toggle",
+      postId: post.id,
+      nextStatus: !post.published,
+      title: post.title,
+    })
+  }
+
+  const executePendingAction = async () => {
+    if (!pendingAction) return
+    setActionLoading(true)
     try {
-      const response = await fetch(`/api/posts/${postId}`, {
-        method: 'DELETE',
-      })
+      if (pendingAction.type === "delete") {
+        const response = await fetch(`/api/posts/${pendingAction.postId}`, {
+          method: "DELETE",
+        })
 
-      if (response.ok) {
-        toast.success('Post deleted successfully')
-        fetchPosts()
-      } else {
-        toast.error('Failed to delete post')
+        if (response.ok) {
+          toast.success("Post deleted successfully")
+          fetchPosts()
+        } else {
+          toast.error("Failed to delete post")
+        }
+      } else if (pendingAction.type === "toggle") {
+        const response = await fetch(`/api/posts/${pendingAction.postId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            published: pendingAction.nextStatus,
+          }),
+        })
+
+        if (response.ok) {
+          toast.success(`Post ${pendingAction.nextStatus ? "published" : "unpublished"} successfully`)
+          fetchPosts()
+        } else {
+          toast.error("Failed to update post status")
+        }
       }
     } catch (error) {
-      toast.error('An error occurred')
+      toast.error("An error occurred")
+    } finally {
+      setActionLoading(false)
+      setPendingAction(null)
     }
   }
 
-  const handleTogglePublish = async (postId: string, currentStatus: boolean) => {
-    try {
-      const response = await fetch(`/api/posts/${postId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          published: !currentStatus,
-        }),
-      })
-
-      if (response.ok) {
-        toast.success(`Post ${!currentStatus ? 'published' : 'unpublished'} successfully`)
-        fetchPosts()
-      } else {
-        toast.error('Failed to update post status')
-      }
-    } catch (error) {
-      toast.error('An error occurred')
+  const formatCurrency = (amount?: number | null) => {
+    if (typeof amount === "number" && Number.isFinite(amount)) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount)
     }
+    return "N/A"
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
-
-  const formatPercentage = (value: number) => {
-    return `${value.toFixed(1)}%`
+  const formatPercentage = (value?: number | null) => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return `${value.toFixed(1)}%`
+    }
+    return "N/A"
   }
 
   if (loading) {
@@ -184,10 +215,17 @@ export function PerformancePostsManager() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map((post) => {
-            const isProfitable = post.profitLoss > 0
+            const isPerformance = post.type === "PERFORMANCE"
+            const hasProfitLoss = typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
+            const profitLossValue = hasProfitLoss ? post.profitLoss! : null
+            const isProfitable = hasProfitLoss && (profitLossValue ?? 0) > 0
             const averageRating = post.reviews.length > 0 
               ? post.reviews.reduce((sum, review) => sum + review.rating, 0) / post.reviews.length 
               : 0
+            const riskRewardDisplay = typeof post.riskReward === "number" && Number.isFinite(post.riskReward)
+              ? post.riskReward.toFixed(2)
+              : "N/A"
+            const descriptionText = post.description?.trim() || "No description provided."
 
             return (
               <Card key={post.id}>
@@ -199,47 +237,69 @@ export function PerformancePostsManager() {
                         {new Date(post.createdAt).toLocaleDateString()}
                       </CardDescription>
                     </div>
-                    <div className="flex space-x-1 ml-2">
+                    <div className="flex flex-col items-end space-y-2 ml-2">
                       <Badge variant={post.published ? "default" : "secondary"}>
                         {post.published ? "Published" : "Draft"}
+                      </Badge>
+                      <Badge variant={isPerformance ? "default" : "outline"}>
+                        {isPerformance ? "Performance" : "Analytics"}
                       </Badge>
                     </div>
                   </div>
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className={`flex items-center space-x-1 ${
-                      isProfitable ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {isProfitable ? (
-                        <TrendingUp className="w-4 h-4" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4" />
-                      )}
-                      <span className="font-semibold">{formatCurrency(post.profitLoss)}</span>
-                    </div>
-                    {averageRating > 0 && (
-                      <div className="text-sm text-gray-600">
-                        ⭐ {averageRating.toFixed(1)} ({post.reviews.length})
+                  {isPerformance ? (
+                    <div className="flex items-center justify-between">
+                      <div className={`flex items-center space-x-1 ${
+                        hasProfitLoss
+                          ? (isProfitable ? 'text-green-600' : 'text-red-600')
+                          : 'text-gray-500'
+                      }`}>
+                        {hasProfitLoss ? (
+                          isProfitable ? (
+                            <TrendingUp className="w-4 h-4" />
+                          ) : (
+                            <TrendingDown className="w-4 h-4" />
+                          )
+                        ) : (
+                          <TrendingUp className="w-4 h-4" />
+                        )}
+                        <span className="font-semibold">{formatCurrency(profitLossValue)}</span>
                       </div>
-                    )}
-                  </div>
+                      {averageRating > 0 && (
+                        <div className="text-sm text-gray-600">
+                          ⭐ {averageRating.toFixed(1)} ({post.reviews.length})
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <span>This is an analytics insight post.</span>
+                      {averageRating > 0 && (
+                        <div>
+                          ⭐ {averageRating.toFixed(1)} ({post.reviews.length})
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <p className="text-sm text-gray-600 line-clamp-3">
-                    {post.description}
+                    {descriptionText}
                   </p>
 
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-gray-500">Win Rate:</span>
-                      <span className="ml-1 font-medium">{formatPercentage(post.winRate)}</span>
+                  {isPerformance && (
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-500">Win Rate:</span>
+                        <span className="ml-1 font-medium">{formatPercentage(post.winRate)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Risk/Reward:</span>
+                        <span className="ml-1 font-medium">{riskRewardDisplay}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-gray-500">Risk/Reward:</span>
-                      <span className="ml-1 font-medium">{post.riskReward.toFixed(2)}</span>
-                    </div>
-                  </div>
+                  )}
 
                   <div className="flex space-x-2 pt-2">
                     <Button
@@ -254,18 +314,31 @@ export function PerformancePostsManager() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleTogglePublish(post.id, post.published)}
+                      onClick={() => requestTogglePublish(post)}
+                      disabled={actionLoading && pendingAction?.postId === post.id}
                     >
-                      {post.published ? "Unpublish" : "Publish"}
+                      {actionLoading && pendingAction?.postId === post.id && pendingAction?.type === "toggle" ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        post.published ? "Unpublish" : "Publish"
+                      )}
                     </Button>
                     
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDeletePost(post.id)}
-                      className="text-red-600 hover:text-red-700"
+                      onClick={() => requestDeletePost(post)}
+                      disabled={actionLoading && pendingAction?.postId === post.id}
+                      className="text-red-600 hover:text-red-700 disabled:text-red-400"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      {actionLoading && pendingAction?.postId === post.id && pendingAction?.type === "delete" ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-3 h-3" />
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -295,6 +368,36 @@ export function PerformancePostsManager() {
           </DialogContent>
         </Dialog>
       )}
+
+      <ConfirmDialog
+        open={!!pendingAction}
+        title={
+          pendingAction?.type === "delete"
+            ? "Delete Performance Post"
+            : pendingAction?.nextStatus
+            ? "Publish Performance Post"
+            : "Unpublish Performance Post"
+        }
+        description={
+          pendingAction?.type === "delete"
+            ? `Are you sure you want to delete "${pendingAction?.title}"? This action cannot be undone.`
+            : pendingAction?.nextStatus
+            ? `Publishing "${pendingAction?.title}" will make it visible to users.`
+            : `Unpublishing "${pendingAction?.title}" will hide it from users.`
+        }
+        confirmLabel={
+          pendingAction?.type === "delete"
+            ? "Delete"
+            : pendingAction?.nextStatus
+            ? "Publish"
+            : "Unpublish"
+        }
+        onCancel={() => {
+          if (!actionLoading) setPendingAction(null)
+        }}
+        onConfirm={executePendingAction}
+        isLoading={actionLoading}
+      />
     </div>
   )
 }

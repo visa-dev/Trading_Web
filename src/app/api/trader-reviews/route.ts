@@ -53,7 +53,8 @@ export async function POST(request: NextRequest) {
 
     // Get the first TRADER role user from the database
     const trader = await prisma.user.findFirst({
-      where: { role: 'TRADER' },
+      where: { role: "TRADER" },
+      select: { id: true },
     })
 
     if (!trader) {
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ success: true, review, message: "Review submitted and pending approval" }, { status: 201 })
+    return NextResponse.json({ success: true, review, message: "Your review will be added shortly." }, { status: 201 })
   } catch (error) {
     console.error("Error creating trader review:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

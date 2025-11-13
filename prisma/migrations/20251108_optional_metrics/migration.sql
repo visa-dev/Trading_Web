@@ -1,0 +1,8 @@
+ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT;
+
+ALTER TABLE "PerformancePost"
+  ALTER COLUMN "description" DROP NOT NULL,
+  ALTER COLUMN "profitLoss" DROP NOT NULL,
+  ALTER COLUMN "winRate" DROP NOT NULL,
+  ALTER COLUMN "drawdown" DROP NOT NULL,
+  ALTER COLUMN "riskReward" DROP NOT NULL;

@@ -1,11 +1,100 @@
-import { NextAuthOptions } from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/db"
 import bcrypt from "bcryptjs"
 
-export const authOptions: NextAuthOptions = {
+type BaseUserSelect = {
+  id: true
+  email: true
+  username: true
+  role: true
+  image: true
+  passwordHash?: true
+  bio?: true
+}
+
+const baseSelect: BaseUserSelect = {
+  id: true,
+  email: true,
+  username: true,
+  role: true,
+  image: true,
+}
+
+const credentialsSelect: BaseUserSelect & { passwordHash: true } = {
+  ...baseSelect,
+  passwordHash: true,
+  bio: true,
+}
+
+const sessionSelect: BaseUserSelect = {
+  ...baseSelect,
+  bio: true,
+}
+
+const isMissingBioColumnError = (error: unknown) => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string" &&
+    (error as { message: string }).message.includes("The column `User.bio` does not exist")
+  )
+}
+
+const fetchUserForCredentials = async (email: string) => {
+  try {
+    return await prisma.user.findUnique({
+      where: { email },
+      select: credentialsSelect,
+    })
+  } catch (error) {
+    if (isMissingBioColumnError(error)) {
+      const { bio, ...fallbackSelect } = credentialsSelect
+      return prisma.user.findUnique({
+        where: { email },
+        select: fallbackSelect,
+      }) as Promise<{
+        id: string
+        email: string | null
+        username: string | null
+        role: string
+        image: string | null
+        passwordHash: string | null
+        bio?: string | null
+      } | null>
+    }
+    throw error
+  }
+}
+
+const fetchUserById = async (id: string) => {
+  try {
+    return await prisma.user.findUnique({
+      where: { id },
+      select: sessionSelect,
+    })
+  } catch (error) {
+    if (isMissingBioColumnError(error)) {
+      const { bio, ...fallbackSelect } = sessionSelect
+      return prisma.user.findUnique({
+        where: { id },
+        select: fallbackSelect,
+      }) as Promise<{
+        id: string
+        email: string | null
+        username: string | null
+        role: string
+        image: string | null
+        bio?: string | null
+      } | null>
+    }
+    throw error
+  }
+}
+
+export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -23,19 +112,17 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        })
+        const user = await fetchUserForCredentials(credentials.email)
 
         if (!user) {
           return null
         }
 
-        // For demo purposes, we'll use simple password comparison
-        // In production, you should hash passwords
-        const isValidPassword = credentials.password === "Trader123!" || credentials.password === "User123!"
+        if (!user.passwordHash) {
+          return null
+        }
+
+        const isValidPassword = await bcrypt.compare(credentials.password, user.passwordHash)
 
         if (!isValidPassword) {
           return null
@@ -46,6 +133,8 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.username,
           role: user.role,
+          image: user.image ?? null,
+          bio: "bio" in user ? (user as { bio?: string | null }).bio ?? null : null,
         }
       }
     })
@@ -54,22 +143,47 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }: { token: any; user?: any; trigger?: string }) {
+      const mutableToken = token as any
       if (user) {
-        token.role = user.role
-        token.name = user.name
-        token.email = user.email
-        token.picture = user.image
+        mutableToken.role = (user as any).role
+        mutableToken.name = user.name
+        mutableToken.email = user.email
+        mutableToken.picture = (user as any).image ?? null
+        mutableToken.bio = (user as any).bio ?? null
       }
-      return token
+      if (trigger === "update" && mutableToken.sub) {
+        const latestUser = await fetchUserById(mutableToken.sub)
+        if (latestUser) {
+          mutableToken.name = latestUser.username ?? mutableToken.name
+          mutableToken.email = latestUser.email ?? mutableToken.email
+          mutableToken.picture = latestUser.image ?? mutableToken.picture ?? null
+          mutableToken.role = latestUser.role ?? mutableToken.role
+          mutableToken.bio =
+            "bio" in latestUser ? latestUser.bio ?? mutableToken.bio ?? null : mutableToken.bio ?? null
+        }
+      }
+      return mutableToken
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub!
-        session.user.name = token.name as string
-        session.user.email = token.email as string
-        session.user.image = token.picture as string
-        session.user.role = token.role as string
+    async session({ session, token }: { session: any; token: any }) {
+      const mutableToken = token as any
+      const mutableSessionUser = session.user as any
+
+      if (mutableToken) {
+        mutableSessionUser.id = mutableToken.sub ?? mutableSessionUser.id
+        if (typeof mutableToken.name === "string") {
+          mutableSessionUser.name = mutableToken.name
+        }
+        if (typeof mutableToken.email === "string") {
+          mutableSessionUser.email = mutableToken.email
+        }
+        mutableSessionUser.image =
+          typeof mutableToken.picture === "string" ? mutableToken.picture : mutableSessionUser.image ?? null
+        if (typeof mutableToken.role === "string") {
+          mutableSessionUser.role = mutableToken.role
+        }
+        mutableSessionUser.bio =
+          typeof mutableToken.bio === "string" ? mutableToken.bio : mutableSessionUser.bio ?? null
       }
       return session
     },

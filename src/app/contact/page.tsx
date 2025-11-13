@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Phone, Mail, MapPin, Clock, Send, User, MessageSquare, CheckCircle } from "lucide-react"
+import { Phone, Mail, Clock, Send, User, MessageSquare, CheckCircle } from "lucide-react"
 import { toast } from "sonner"
 
 export default function ContactPage() {
@@ -40,7 +40,7 @@ export default function ContactPage() {
       const body = encodeURIComponent(
         `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
       )
-      const mailtoLink = `mailto:contact@sahanakalanka.com?subject=${subject}&body=${body}`
+      const mailtoLink = `mailto:info@sahanakalanka.com?subject=${subject}&body=${body}`
       
       window.open(mailtoLink, '_blank')
       
@@ -100,15 +100,11 @@ export default function ContactPage() {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <Mail className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">contact@sahanakalanka.com</span>
+                    <span className="text-gray-300">info@sahanakalanka.com</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Phone className="w-5 h-5 text-yellow-400" />
                     <span className="text-gray-300">+94 77 638 7655</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <MapPin className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">New York, USA</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Clock className="w-5 h-5 text-yellow-400" />
@@ -128,7 +124,7 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button
-                  onClick={() => window.open('mailto:contact@sahanakalanka.com', '_blank')}
+                  onClick={() => window.open('mailto:info@sahanakalanka.com', '_blank')}
                   className="w-full justify-start"
                   variant="outline"
                 >

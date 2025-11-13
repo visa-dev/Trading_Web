@@ -18,8 +18,7 @@ export function AddVideoModal({ isOpen, onClose }: AddVideoModalProps) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    youtubeUrl: "",
-    performanceMetrics: ""
+    youtubeUrl: ""
   })
   const [loading, setLoading] = useState(false)
 
@@ -50,8 +49,7 @@ export function AddVideoModal({ isOpen, onClose }: AddVideoModalProps) {
         setFormData({
           title: "",
           description: "",
-          youtubeUrl: "",
-          performanceMetrics: ""
+          youtubeUrl: ""
         })
       } else {
         toast.error("Failed to add video")
@@ -146,22 +144,6 @@ export function AddVideoModal({ isOpen, onClose }: AddVideoModalProps) {
               )}
             </div>
 
-            <div>
-              <Label htmlFor="performanceMetrics" className="text-white">Performance Metrics (JSON)</Label>
-              <Textarea
-                id="performanceMetrics"
-                name="performanceMetrics"
-                value={formData.performanceMetrics}
-                onChange={handleInputChange}
-                placeholder='{"profit": 1500, "winRate": 75, "trades": 20}'
-                className="bg-gray-800 border-gray-700 text-white font-mono text-sm"
-                rows={4}
-                required
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Enter performance data as JSON format
-              </p>
-            </div>
           </div>
 
           <div className="flex justify-end space-x-3">

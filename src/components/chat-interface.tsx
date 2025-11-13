@@ -53,12 +53,6 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
   useEffect(() => {
     if (conversationId) {
       fetchMessages()
-      // Set up real-time updates (polling every 3 seconds)
-      const interval = setInterval(fetchMessages, 3000)
-      
-      return () => {
-        clearInterval(interval)
-      }
     }
   }, [conversationId, fetchMessages])
 

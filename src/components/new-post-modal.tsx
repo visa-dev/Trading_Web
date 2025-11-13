@@ -92,7 +92,7 @@ export function NewPostModal({ isOpen, onClose }: NewPostModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl card-material">
+      <DialogContent className="max-w-2xl card-material max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-bold text-white">
@@ -138,7 +138,7 @@ export function NewPostModal({ isOpen, onClose }: NewPostModalProps) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="profitLoss" className="text-white">Profit/Loss ($)</Label>
                 <Input
@@ -168,7 +168,7 @@ export function NewPostModal({ isOpen, onClose }: NewPostModalProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="drawdown" className="text-white">Drawdown (%)</Label>
                 <Input
@@ -229,7 +229,7 @@ export function NewPostModal({ isOpen, onClose }: NewPostModalProps) {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:space-x-3">
             <Button
               type="button"
               variant="outline"

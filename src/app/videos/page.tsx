@@ -3,19 +3,21 @@
 import { useEffect, useState } from "react"
 import { VideoCard } from "@/components/video-card"
 import { motion } from "framer-motion"
+import { VideoModal } from "@/components/video-modal"
 
 interface TradingVideo {
   id: string
   title: string
   youtubeUrl: string
   description: string
-  performanceMetrics?: Record<string, unknown>
   createdAt: string
 }
 
 export default function VideosPage() {
   const [videos, setVideos] = useState<TradingVideo[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedVideo, setSelectedVideo] = useState<TradingVideo | null>(null)
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
 
   useEffect(() => {
     fetchVideos()
@@ -33,6 +35,16 @@ export default function VideosPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleWatchVideo = (video: TradingVideo) => {
+    setSelectedVideo(video)
+    setIsVideoModalOpen(true)
+  }
+
+  const handleCloseVideoModal = () => {
+    setIsVideoModalOpen(false)
+    setSelectedVideo(null)
   }
 
   return (
@@ -85,7 +97,7 @@ export default function VideosPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <VideoCard video={video} />
+                <VideoCard video={video} onWatch={handleWatchVideo} />
               </motion.div>
             ))}
           </motion.div>
@@ -105,6 +117,11 @@ export default function VideosPage() {
           </motion.div>
         )}
       </div>
+      <VideoModal
+        video={selectedVideo}
+        isOpen={isVideoModalOpen}
+        onClose={handleCloseVideoModal}
+      />
     </div>
   )
 }

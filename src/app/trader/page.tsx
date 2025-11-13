@@ -64,7 +64,7 @@ export default function TraderPage() {
               </li>
               <li className="flex items-start">
                 <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                <span>Verified performance on MyFXBook with live data</span>
+                <span>Verified live performance data with transparent reporting</span>
               </li>
               <li className="flex items-start">
                 <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
@@ -105,7 +105,7 @@ export default function TraderPage() {
                     className="flex items-center justify-center"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    View Full MyFXBook Profile
+                    View Full Live Performance Profile
                   </a>
                 </Button>
               </div>

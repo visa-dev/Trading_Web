@@ -1,14 +1,14 @@
 import type { Metadata } from "next"
-import "./globals.css"
 import { Providers } from "@/components/providers"
-import { Navigation } from "@/components/navigation"
-import { ConditionalFloatingChat } from "@/components/conditional-floating-chat"
-import { SessionDebug } from "@/components/session-debug"
-import { Toaster } from "sonner"
+import { AppShell } from "@/components/app-shell"
+import "./globals.css"
+import { inter, spaceGrotesk, jetBrainsMono, orbitron } from "@/lib/fonts"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Sahan Akalanka - Trading Performance Showcase",
-  description: "Professional trading performance tracking and analysis platform with AI-powered insights",
+  description: "Professional trading performance tracking and analysis platform with signal-driven insights",
 }
 
 export default function RootLayout({
@@ -17,26 +17,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${spaceGrotesk.variable} ${jetBrainsMono.variable} ${orbitron.variable} dark`}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased selection:bg-yellow-200/30 selection:text-gray-900 transition-colors duration-300">
         <Providers>
-          <Navigation />
-          <main className="pt-20 sm:pt-24">{children}</main>
-          <ConditionalFloatingChat />
-          <SessionDebug />
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: 'var(--card)',
-                backdropFilter: 'blur(20px)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                boxShadow: 'var(--elevation-3)',
-                color: 'var(--card-foreground)',
-              },
-            }}
-          />
+          <AppShell>
+            {children}
+          </AppShell>
         </Providers>
       </body>
     </html>

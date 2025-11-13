@@ -12,8 +12,13 @@ import { addCacheBusting } from "@/lib/chat-utils"
 interface Conversation {
   id: string
   lastMessage?: string | null
+  lastMessageMeta?: {
+    id: string
+    createdAt: string
+    senderRole: "USER" | "TRADER"
+  } | null
   unreadCount: number
-  updatedAt: Date
+  updatedAt: string
   user?: {
     username: string
     image?: string | null
@@ -33,6 +38,7 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
   const { data: session } = useSession()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(true)
+  const sessionUserRole = (session?.user as { role?: string } | undefined)?.role
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -50,16 +56,17 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
 
   useEffect(() => {
     fetchConversations()
-    
-    // Auto-refresh conversations every 10 seconds
+  }, [fetchConversations])
+
+  useEffect(() => {
+    if (sessionUserRole !== "TRADER") return
+
     const interval = setInterval(() => {
       fetchConversations()
-    }, 10000)
+    }, 15000)
 
-    return () => {
-      clearInterval(interval)
-    }
-  }, [fetchConversations])
+    return () => clearInterval(interval)
+  }, [sessionUserRole, fetchConversations])
 
   const startNewConversation = async () => {
     try {
@@ -81,17 +88,41 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
     }
   }
 
-  const formatLastMessageTime = (date: Date) => {
-    const now = new Date()
-    const diffInHours = (now.getTime() - new Date(date).getTime()) / (1000 * 60 * 60)
-    
-    if (diffInHours < 1) {
-      return 'Just now'
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`
-    } else {
-      return new Date(date).toLocaleDateString()
+  const formatLastMessageTime = (date: string) => {
+    const timestamp = new Date(date)
+    if (Number.isNaN(timestamp.getTime())) {
+      return ""
     }
+
+    const now = new Date()
+    const diffMs = now.getTime() - timestamp.getTime()
+
+    if (diffMs < 0) {
+      return timestamp.toLocaleDateString()
+    }
+
+    const diffMinutes = Math.floor(diffMs / (1000 * 60))
+    if (diffMinutes < 1) {
+      return "Just now"
+    }
+    if (diffMinutes < 60) {
+      return `${diffMinutes}m ago`
+    }
+
+    const diffHours = Math.floor(diffMinutes / 60)
+    if (diffHours < 24) {
+      return `${diffHours}h ago`
+    }
+
+    const diffDays = Math.floor(diffHours / 24)
+    if (diffDays === 1) {
+      return "Yesterday"
+    }
+    if (diffDays < 7) {
+      return `${diffDays}d ago`
+    }
+
+    return timestamp.toLocaleDateString()
   }
 
   if (loading) {
@@ -128,14 +159,14 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
             <MessageSquare className="w-5 h-5" />
             <span>Conversations</span>
           </div>
-          {session?.user?.role === "USER" && (
+          {sessionUserRole === "USER" && (
             <Button size="sm" onClick={startNewConversation} className="btn-material">
               <Plus className="w-4 h-4" />
             </Button>
           )}
         </CardTitle>
         <CardDescription className="text-gray-300">
-          {session?.user?.role === "TRADER" 
+          {sessionUserRole === "TRADER" 
             ? "Manage user conversations" 
             : "Start a conversation with the trader"
           }
@@ -147,7 +178,7 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
           <div className="p-6 text-center text-gray-300">
             <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p>No conversations yet</p>
-            {session?.user?.role === "USER" && (
+            {sessionUserRole === "USER" && (
               <Button 
                 onClick={startNewConversation}
                 className="mt-4 btn-material"
@@ -159,14 +190,22 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
         ) : (
           <div className="space-y-1">
             {conversations.map((conversation) => {
-              const otherUser = session?.user?.role === "TRADER" 
+              const viewingAsTrader = sessionUserRole === "TRADER"
+              const otherUser = viewingAsTrader 
                 ? conversation.user 
                 : conversation.trader
+              const displayName = viewingAsTrader
+                ? (otherUser?.username || "User")
+                : "Signal Expert"
+
+              const showUnreadBadge = viewingAsTrader && (conversation.unreadCount ?? 0) > 0
+              const unreadDisplay =
+                (conversation.unreadCount ?? 0) > 99 ? "99+" : conversation.unreadCount ?? 0
 
               return (
                 <div
                   key={conversation.id}
-                  className={`p-4 cursor-pointer hover:bg-gray-800/50 border-b border-gray-700/50 transition-colors duration-200 ${
+                  className={`relative p-4 cursor-pointer hover:bg-gray-800/50 border-b border-gray-700/50 transition-colors duration-200 ${
                     selectedConversationId === conversation.id 
                       ? 'bg-yellow-500/10 border-yellow-400/30' 
                       : ''
@@ -177,16 +216,20 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={otherUser?.image || ""} />
                       <AvatarFallback>
-                        {otherUser?.username?.charAt(0).toUpperCase() || "U"}
+                        {displayName.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <p className="text-sm font-medium text-white truncate">
-                          {otherUser?.username || "Unknown User"}
+                          {displayName}
                         </p>
-                        {/* Unread count badge hidden */}
+                        {showUnreadBadge ? (
+                          <Badge className="ml-2 bg-red-500/90 text-white px-2">
+                            {unreadDisplay}
+                          </Badge>
+                        ) : null}
                       </div>
                       
                       <div className="flex items-center justify-between mt-1">
@@ -194,7 +237,7 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
                           {conversation.lastMessage || "No messages yet"}
                         </p>
                         <p className="text-xs text-gray-400">
-                          {formatLastMessageTime(conversation.updatedAt)}
+                          {formatLastMessageTime(conversation.lastMessageMeta?.createdAt ?? conversation.updatedAt)}
                         </p>
                       </div>
                     </div>
