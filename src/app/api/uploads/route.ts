@@ -1,9 +1,34 @@
+import type { Session } from "next-auth"
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { put } from "@vercel/blob"
+import { put, del } from "@vercel/blob"
+import { prisma } from "@/lib/db"
 
 const ALLOWED_FOLDERS = new Set(["performance-posts", "profile-images"])
+const BLOB_HOST_SUFFIX = ".blob.vercel-storage.com"
+
+function isVercelBlobUrl(url: string | null | undefined): url is string {
+  if (!url) return false
+  try {
+    const parsed = new URL(url)
+    return parsed.hostname.endsWith(BLOB_HOST_SUFFIX)
+  } catch {
+    return false
+  }
+}
+
+async function deleteBlobByUrl(url: string) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return
+  }
+
+  try {
+    await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN })
+  } catch (error) {
+    console.error("Failed to delete blob by URL:", error)
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,12 +47,15 @@ export async function POST(request: NextRequest) {
 
     const folderName = folder && ALLOWED_FOLDERS.has(folder) ? folder : "uploads"
 
-    const session = await getServerSession(authOptions)
+    const session = (await getServerSession(authOptions)) as (Session & {
+      user?: Session["user"] & { id?: string | null }
+    }) | null
+    const sessionUserId = session?.user?.id ?? null
 
     const guestUploadAllowed =
-      !session?.user?.id && folderName === "profile-images" && allowGuest === "true"
+      !sessionUserId && folderName === "profile-images" && allowGuest === "true"
 
-    if (!session?.user?.id && !guestUploadAllowed) {
+    if (!sessionUserId && !guestUploadAllowed) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -41,6 +69,28 @@ export async function POST(request: NextRequest) {
       token: process.env.BLOB_READ_WRITE_TOKEN,
       addRandomSuffix: false,
     })
+
+    if (sessionUserId && folderName === "profile-images") {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: sessionUserId },
+          select: { image: true },
+        })
+
+        const previousImageUrl = user?.image ?? null
+
+        await prisma.user.update({
+          where: { id: sessionUserId },
+          data: { image: blob.url },
+        })
+
+        if (previousImageUrl && previousImageUrl !== blob.url && isVercelBlobUrl(previousImageUrl)) {
+          await deleteBlobByUrl(previousImageUrl)
+        }
+      } catch (error) {
+        console.error("Failed to update user profile image after upload:", error)
+      }
+    }
 
     return NextResponse.json({ url: blob.url })
   } catch (error) {

@@ -116,53 +116,56 @@ export default function ProfilePage() {
         throw new Error("Upload failed")
       }
 
-      const { url } = await uploadResponse.json()
+      const { url } = (await uploadResponse.json()) as { url?: string }
+      const imageUrl = typeof url === "string" ? url : null
 
-      const updateResponse = await fetch("/api/profile/photo", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: url }),
-      })
-
-      if (!updateResponse.ok) {
-        throw new Error("Failed to save profile photo")
+      if (!imageUrl) {
+        throw new Error("Upload did not return an image URL")
       }
 
-      await update({ user: { image: url } })
+      let updatedImageUrl = imageUrl
+      let patchError: Error | null = null
+
+      try {
+        const updateResponse = await fetch("/api/profile/photo", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl }),
+        })
+
+        if (updateResponse.ok) {
+          const payload = await updateResponse.json().catch(() => ({}))
+          if (payload && typeof payload.imageUrl === "string") {
+            updatedImageUrl = payload.imageUrl
+          }
+        } else if (updateResponse.status !== 401) {
+          const payload = await updateResponse.json().catch(() => ({}))
+          const message =
+            typeof payload?.error === "string" ? payload.error : "Failed to save profile photo"
+          throw new Error(message)
+        }
+      } catch (error) {
+        console.error("Profile photo patch failed:", error)
+        patchError = error instanceof Error ? error : new Error("Unknown error updating profile photo")
+      }
+
+      await update({ user: { image: updatedImageUrl } })
       toast.success("Profile photo updated")
 
-      revokeObjectUrl(previewUrl)
-      setPreviewUrl(url)
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        revokeObjectUrl(previewUrl)
+      }
+      setPreviewUrl(updatedImageUrl)
       setPreparedFile(null)
+
+      if (patchError) {
+        toast.message("Profile picture saved", {
+          description: "We updated your photo, but couldn't confirm removal of the old one.",
+        })
+      }
     } catch (error) {
       console.error(error)
       toast.error("Could not update profile photo")
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
-  const removeProfilePhoto = async () => {
-    setIsUploading(true)
-    try {
-      const response = await fetch("/api/profile/photo", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: null }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to remove photo")
-      }
-
-      await update({ user: { image: null } })
-      toast.success("Profile photo removed")
-      setPreparedFile(null)
-      revokeObjectUrl(previewUrl)
-      setPreviewUrl(null)
-    } catch (error) {
-      console.error(error)
-      toast.error("Could not remove profile photo")
     } finally {
       setIsUploading(false)
     }
@@ -172,6 +175,10 @@ export default function ProfilePage() {
     if (previewUrl) return previewUrl
     return user?.image ?? null
   }, [previewUrl, user?.image])
+
+  const hasExistingImage = useMemo(() => {
+    return Boolean(user?.image && user.image.length > 0)
+  }, [user?.image])
 
   const role = useMemo(() => {
     return (user as { role?: string } | null)?.role ?? "USER"
@@ -262,30 +269,24 @@ export default function ProfilePage() {
                 <p className="text-sm text-gray-400 mb-4">
                   {displayImage ? "Profile picture" : "No profile picture"}
                 </p>
-                <div className="space-y-3">
-                  <Input id="profilePhoto" type="file" accept="image/*" onChange={handleFileChange} />
-                  <Button
-                    type="button"
-                    onClick={uploadProfilePhoto}
-                    disabled={isUploading || !preparedFile}
-                    className="w-full bg-amber-600 hover:bg-amber-700 flex items-center justify-center space-x-2"
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
-                  </Button>
-                  {(user.image || previewUrl) && (
+                {hasExistingImage ? (
+                  <div className="space-y-3 text-sm text-gray-400">
+                    <p>This image was set during signup. Profile pictures can’t be changed after account creation.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Input id="profilePhoto" type="file" accept="image/*" onChange={handleFileChange} />
                     <Button
                       type="button"
-                      variant="outline"
-                      onClick={removeProfilePhoto}
-                      disabled={isUploading}
-                      className="w-full flex items-center justify-center space-x-2 border-red-500/40 text-red-400 hover:bg-red-500/10"
+                      onClick={uploadProfilePhoto}
+                      disabled={isUploading || !preparedFile}
+                      className="w-full bg-amber-600 hover:bg-amber-700 flex items-center justify-center space-x-2"
                     >
-                      <Trash className="w-4 h-4" />
-                      <span>Remove Photo</span>
+                      <Upload className="w-4 h-4" />
+                      <span>{isUploading ? "Uploading..." : "Upload Photo"}</span>
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
