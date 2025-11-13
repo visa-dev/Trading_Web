@@ -1,7 +1,10 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
+import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
   Shield,
@@ -10,8 +13,10 @@ import {
   Quote,
   Globe,
   Mail,
-  Phone
+  Phone,
+  ArrowRight,
 } from "lucide-react"
+import profileImage from "@/assets/profile.jpg"
 import { SiTelegram, SiFacebook, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
 
 const socialLinks = [
@@ -22,21 +27,103 @@ const socialLinks = [
   { label: "YouTube", href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ", icon: SiYoutube }
 ]
 
+const highlightStats = [
+  { title: "10+ Years", subtitle: "Trading Experience" },
+  { title: "500+ Clients", subtitle: "Guided & Supported" },
+  { title: "94% Signal", subtitle: "Accuracy (Gold Focus)" },
+]
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-16">
-      <div className="max-w-5xl mx-auto px-4 space-y-14">
-        <header className="space-y-4 text-center">
-          <span className="inline-flex items-center text-xs font-semibold uppercase tracking-[0.3em] text-yellow-400/90">
-            <Shield className="mr-2 h-4 w-4" /> About Me – Sahan Akalanka
-          </span>
-          <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
-            Professional Trader & Founder of Athens International Education Centre LTD
-          </h1>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto">
-            I’m dedicated to empowering traders through disciplined execution, transparent services, and education that bridges the gap between traditional learning and modern market mastery.
-          </p>
-        </header>
+      <div className="max-w-6xl mx-auto px-4 space-y-16">
+        <motion.section
+          className="relative overflow-hidden rounded-3xl border border-slate-800/60 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 shadow-[0_30px_120px_-40px_rgba(0,0,0,0.8)]"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
+          <div className="pointer-events-none absolute inset-0">
+            <div className="absolute -top-40 -left-32 h-80 w-80 rounded-full bg-yellow-500/10 blur-3xl" />
+            <div className="absolute -bottom-32 -right-24 h-72 w-72 rounded-full bg-blue-500/10 blur-3xl" />
+          </div>
+
+          <div className="relative grid grid-cols-1 gap-12 px-6 py-12 sm:px-10 lg:grid-cols-[3fr_2fr] lg:items-center lg:py-14">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="space-y-6 text-center lg:text-left"
+            >
+              <div className="inline-flex items-center justify-center rounded-full border border-yellow-400/20 bg-yellow-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-yellow-400 lg:justify-start">
+                About Me
+              </div>
+              <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl">
+                Professional Trader &
+                <span className="block gradient-text-gold"> Strategic Mentor</span>
+              </h1>
+              <p className="text-lg text-gray-300 md:text-xl">
+                I’m Sahan Akalanka, founder of Athens International Education Centre LTD. My mission is to
+                transform traders through disciplined execution, transparent performance, and premium education
+                grounded in signal-driven strategies.
+              </p>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {highlightStats.map((item) => (
+                  <motion.div
+                    key={item.title}
+                    className="rounded-2xl border border-yellow-400/20 bg-slate-900/60 px-4 py-5 text-center shadow-lg shadow-yellow-500/5"
+                    whileHover={{ y: -4, scale: 1.01 }}
+                    transition={{ type: "spring", stiffness: 220, damping: 20 }}
+                  >
+                    <p className="text-2xl font-semibold text-white">{item.title}</p>
+                    <p className="text-xs uppercase tracking-wider text-yellow-400/80">{item.subtitle}</p>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row">
+                <Button asChild size="lg" className="btn-material">
+                  <Link href="/posts" className="flex items-center gap-2">
+                    Explore Performance
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="btn-material-outline">
+                  <Link href="/account-management">Account Management</Link>
+                </Button>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative mx-auto flex w-full max-w-sm justify-center lg:justify-end"
+            >
+              <div className="relative">
+                <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-yellow-500/30 via-transparent to-blue-500/20 blur-2xl" />
+                <div className="relative overflow-hidden rounded-[2.5rem] border border-yellow-400/20 bg-slate-900/80 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.8)]">
+                  <Image
+                    src={profileImage}
+                    alt="Sahan Akalanka portrait"
+                    className="h-full w-full object-cover"
+                    priority
+                  />
+                </div>
+
+                <motion.div
+                  className="absolute -bottom-6 left-1/2 w-48 -translate-x-1/2 rounded-2xl border border-yellow-400/20 bg-slate-900/80 px-4 py-3 text-center text-sm text-yellow-300 shadow-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  Verified Signal Provider
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.section>
 
         <Card className="card-material border border-slate-800/60 bg-slate-900/60">
           <CardHeader className="space-y-3">

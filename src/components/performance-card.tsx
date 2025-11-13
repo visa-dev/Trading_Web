@@ -204,8 +204,8 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
               <CardTitle className="text-xl font-bold text-foreground line-clamp-2 mb-3 group-hover:text-yellow-400 transition-colors">
                 {post.title}
               </CardTitle>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                       <div className="flex items-center space-x-2">
                         <Calendar className="w-4 h-4" />
                         <span>{new Date(post.createdAt).toLocaleDateString()}</span>
@@ -223,8 +223,8 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
                       )}
                     </div>
                     {post.reviews.length > 0 && (
-                      <div className="flex items-center space-x-2">
-                        <Star className="w-4 h-4 text-yellow-400" />
+                      <div className="flex items-center space-x-2 text-sm">
+                        <Star className="w-4 h-4 text-yellow-400 flex-shrink-0" />
                         <span className="text-yellow-400 font-medium">{averageRating.toFixed(1)}</span>
                         <span className="text-gray-400">({post.reviews.length})</span>
                       </div>
@@ -242,7 +242,7 @@ export function PerformanceCard({ post }: PerformanceCardProps) {
           {isPerformance && (
             <>
               {/* Key metrics with Navy & Gold styling */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <motion.div 
                   className={`bg-gradient-to-br ${getPerformanceBg(winRateValue)} p-4 rounded-xl border border-blue-500/20 hover:border-blue-400/50 transition-all duration-300`}
                   whileHover={{ scale: 1.02, y: -2 }}

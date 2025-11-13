@@ -166,15 +166,15 @@ export function DashboardClient({ session }: DashboardClientProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl font-bold text-white">
                 Trader
                 <span className="block gradient-text-gold">Dashboard</span>
               </h1>
               <p className="text-xl text-gray-300">Manage your trading performance and user interactions</p>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center justify-end">
               <div className="relative" ref={notificationsRef}>
                 <Button
                   className="btn-material relative"
@@ -289,38 +289,38 @@ export function DashboardClient({ session }: DashboardClientProps) {
           transition={{ duration: 0.8, delay: 0.5 }}
         >
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 bg-navy-800/50 border-navy-700">
+            <TabsList className="flex w-full flex-wrap gap-2 overflow-x-auto rounded-2xl border border-navy-700 bg-navy-800/50 p-1 sm:gap-3">
               <TabsTrigger
                 value="overview"
-                className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
+                className="flex min-w-[140px] items-center justify-center space-x-2 whitespace-nowrap px-3 py-2 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
               >
                 <BarChart3 className="w-4 h-4" />
                 <span>Overview</span>
               </TabsTrigger>
               <TabsTrigger
                 value="posts"
-                className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
+                className="flex min-w-[140px] items-center justify-center space-x-2 whitespace-nowrap px-3 py-2 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
               >
                 <FileText className="w-4 h-4" />
                 <span>Posts</span>
               </TabsTrigger>
               <TabsTrigger
                 value="videos"
-                className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
+                className="flex min-w-[140px] items-center justify-center space-x-2 whitespace-nowrap px-3 py-2 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
               >
                 <Video className="w-4 h-4" />
                 <span>Videos</span>
               </TabsTrigger>
               <TabsTrigger
                 value="reviews"
-                className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
+                className="flex min-w-[140px] items-center justify-center space-x-2 whitespace-nowrap px-3 py-2 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
               >
                 <Star className="w-4 h-4" />
                 <span>Reviews</span>
               </TabsTrigger>
               <TabsTrigger
                 value="messages"
-                className="flex items-center space-x-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
+                className="flex min-w-[140px] items-center justify-center space-x-2 whitespace-nowrap px-3 py-2 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Messages</span>
@@ -350,17 +350,20 @@ export function DashboardClient({ session }: DashboardClientProps) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.6 }}
               >
-                <div className="flex h-full">
-                  <div className="w-1/3 border-r border-gray-700/50 pr-4">
-                    <ConversationsList onSelectConversation={setSelectedConversationId} selectedConversationId={selectedConversationId} />
+                <div className="flex h-full flex-col md:flex-row">
+                  <div className="w-full md:w-1/3 md:border-r md:border-gray-700/50 md:pr-4">
+                    <ConversationsList
+                      onSelectConversation={setSelectedConversationId}
+                      selectedConversationId={selectedConversationId}
+                    />
                   </div>
-                  <div className="flex-1 pl-4">
+                  <div className="mt-4 flex-1 md:mt-0 md:pl-4">
                     {selectedConversationId ? (
                       <ChatInterface conversationId={selectedConversationId} />
                     ) : (
-                      <div className="flex-1 flex items-center justify-center text-gray-300">
-                        <div className="text-center">
-                          <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-500" />
+                      <div className="flex h-full items-center justify-center text-gray-300">
+                        <div className="text-center space-y-2">
+                          <MessageSquare className="w-12 h-12 mx-auto text-gray-500" />
                           <p className="text-lg">Select a conversation</p>
                           <p className="text-sm text-gray-400">to view messages</p>
                         </div>
