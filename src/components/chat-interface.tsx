@@ -202,6 +202,7 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
                     return <Fragment key={`token-${token}-${idx}`}>{token}</Fragment>
                   })
                 }
+                
 
                 return lines.map((line, index) => {
                   const trimmed = line.trim()
