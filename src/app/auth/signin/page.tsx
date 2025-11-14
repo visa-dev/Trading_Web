@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -19,25 +19,59 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Handle error from URL parameters (e.g., OAuthAccountNotLinked)
+  useEffect(() => {
+    const error = searchParams.get("error")
+    const callbackUrl = searchParams.get("callbackUrl")
+
+    if (error) {
+      // Clear the error from URL to prevent refresh loops
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete("error")
+      if (callbackUrl) {
+        newUrl.searchParams.delete("callbackUrl")
+      }
+      window.history.replaceState({}, "", newUrl.toString())
+
+      // Show appropriate error message
+      if (error === "OAuthAccountNotLinked") {
+        toast.error("This email is already registered with a password. Please sign in with your email and password, or use a different Google account.")
+      } else if (error === "OAuthCallback") {
+        toast.error("Failed to sign in with Google. Please try again.")
+      } else {
+        toast.error("Authentication failed. Please try again.")
+      }
+    }
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
+    const trimmedEmail = email.trim().toLowerCase()
+
+    if (!trimmedEmail || !password) {
+      toast.error("Please enter both email and password")
+      setIsLoading(false)
+      return
+    }
+
     try {
       const result = await signIn("credentials", {
-        email,
+        email: trimmedEmail,
         password,
         redirect: false,
       })
 
       if (result?.error) {
         toast.error("Invalid email or password")
-      } else {
+      } else if (result?.ok) {
         toast.success("Welcome back!")
         
         // Get the session to check user role
-        const sessionResponse = await fetch('/api/auth/session')
+        const sessionResponse = await fetch("/api/auth/session")
         const sessionData = await sessionResponse.json()
         
         // Redirect traders to dashboard, users to home
@@ -47,7 +81,8 @@ export default function SignInPage() {
           router.push("/")
         }
       }
-    } catch {
+    } catch (error) {
+      console.error("Sign in error:", error)
       toast.error("An error occurred. Please try again.")
     } finally {
       setIsLoading(false)
@@ -57,9 +92,17 @@ export default function SignInPage() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
     try {
-      await signIn("google", { callbackUrl: "/" })
+      const result = await signIn("google", { 
+        callbackUrl: "/",
+        redirect: true 
+      })
+      // If redirect is false, handle manually
+      if (result && !result.ok && result.error) {
+        toast.error(result.error === "OAuthCallback" ? "Failed to sign in with Google. Please try again." : "Authentication failed")
+      }
     } catch (error) {
-      toast.error("Failed to sign in with Google")
+      console.error("Google sign in error:", error)
+      toast.error("Failed to sign in with Google. Please check your credentials.")
     } finally {
       setIsGoogleLoading(false)
     }

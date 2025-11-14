@@ -96,159 +96,73 @@ const fetchUserById = async (id: string) => {
   }
 }
 
-const prismaAdapter = PrismaAdapter(prisma)
+const baseAdapter = PrismaAdapter(prisma)
 
-const adapter: Adapter = {
-  ...prismaAdapter,
-  async createUser(profile) {
-    if (!profile?.email) {
-      throw new Error("Google profile did not return an email address.")
-    }
-
+// Custom adapter that extends PrismaAdapter to handle username generation and account linking
+const customAdapter: Adapter = {
+  ...baseAdapter,
+  async createUser(user: {
+    email: string
+    emailVerified?: Date | null
+    name?: string | null
+    image?: string | null
+  }) {
+    const normalizedEmail = user.email.trim().toLowerCase()
+    
+    // Check if user already exists (could be from email/password signup)
     const existingUser = await prisma.user.findUnique({
-      where: { email: profile.email },
+      where: { email: normalizedEmail },
+      select: { id: true, email: true, username: true, image: true },
     })
 
     if (existingUser) {
+      // User exists, return it instead of creating a new one
+      // Map username to name for adapter compatibility
       return {
         id: existingUser.id,
         email: existingUser.email,
-        emailVerified: null,
-        name: existingUser.username,
-        image: existingUser.image ?? null,
-        role: existingUser.role,
+        emailVerified: null, // Our schema doesn't have emailVerified
+        name: existingUser.username, // Map username to name
+        image: existingUser.image,
       }
     }
 
-    const image = (profile as Record<string, unknown>).image ?? (profile as Record<string, unknown>).picture ?? null
-
+    // Generate unique username
     const baseName =
-      (profile as Record<string, unknown>).username ??
-      profile.name ??
-      (typeof profile.email === "string" ? profile.email.split("@")[0] : "") ??
+      user.name ??
+      (user.email ? user.email.split("@")[0] : null) ??
       `Trader ${Date.now().toString().slice(-6)}`
-
     const username = await generateUniqueUsername(String(baseName))
 
-    const user = await prisma.user.create({
+    // Create new user with username and role
+    const newUser = await prisma.user.create({
       data: {
-        email: profile.email,
+        email: normalizedEmail,
         username,
-        image: typeof image === "string" ? image : null,
+        image: user.image ?? null,
         role: "USER",
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        image: true,
       },
     })
 
-    const emailVerified =
-      profile.emailVerified instanceof Date
-        ? profile.emailVerified
-        : typeof profile.emailVerified === "string"
-          ? new Date(profile.emailVerified)
-          : null
-
     return {
-      id: user.id,
-      email: user.email,
-      emailVerified,
-      name: user.username,
-      image: user.image ?? null,
-      role: user.role,
+      id: newUser.id,
+      email: newUser.email,
+      emailVerified: null, // Our schema doesn't have emailVerified
+      name: newUser.username, // Map username to name
+      image: newUser.image,
     }
   },
 }
 
-type BaseUserSelect = {
-  id: true
-  email: true
-  username: true
-  role: true
-  image: true
-  passwordHash?: true
-  bio?: true
-}
-
-const baseSelect: BaseUserSelect = {
-  id: true,
-  email: true,
-  username: true,
-  role: true,
-  image: true,
-}
-
-const credentialsSelect: BaseUserSelect & { passwordHash: true } = {
-  ...baseSelect,
-  passwordHash: true,
-  bio: true,
-}
-
-const sessionSelect: BaseUserSelect = {
-  ...baseSelect,
-  bio: true,
-}
-
-const isMissingBioColumnError = (error: unknown) => {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof (error as { message: unknown }).message === "string" &&
-    (error as { message: string }).message.includes("The column `User.bio` does not exist")
-  )
-}
-
-const fetchUserForCredentials = async (email: string) => {
-  try {
-    return await prisma.user.findUnique({
-      where: { email },
-      select: credentialsSelect,
-    })
-  } catch (error) {
-    if (isMissingBioColumnError(error)) {
-      const { bio, ...fallbackSelect } = credentialsSelect
-      return prisma.user.findUnique({
-        where: { email },
-        select: fallbackSelect,
-      }) as Promise<{
-        id: string
-        email: string | null
-        username: string | null
-        role: string
-        image: string | null
-        passwordHash: string | null
-        bio?: string | null
-      } | null>
-    }
-    throw error
-  }
-}
-
-const fetchUserById = async (id: string) => {
-  try {
-    return await prisma.user.findUnique({
-      where: { id },
-      select: sessionSelect,
-    })
-  } catch (error) {
-    if (isMissingBioColumnError(error)) {
-      const { bio, ...fallbackSelect } = sessionSelect
-      return prisma.user.findUnique({
-        where: { id },
-        select: fallbackSelect,
-      }) as Promise<{
-        id: string
-        email: string | null
-        username: string | null
-        role: string
-        image: string | null
-        bio?: string | null
-      } | null>
-    }
-    throw error
-  }
-}
-
 export const authOptions = {
-  adapter,
+  adapter: customAdapter,
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -265,7 +179,14 @@ export const authOptions = {
           return null
         }
 
-        const user = await fetchUserForCredentials(credentials.email)
+        const normalizedEmail = credentials.email.trim().toLowerCase()
+        const password = credentials.password
+
+        if (password.length === 0) {
+          return null
+        }
+
+        const user = await fetchUserForCredentials(normalizedEmail)
 
         if (!user) {
           return null
@@ -296,15 +217,63 @@ export const authOptions = {
     strategy: "jwt",
   },
   callbacks: {
-    async jwt({ token, user, trigger }: { token: any; user?: any; trigger?: string }) {
-      const mutableToken = token as any
-      if (user) {
-        mutableToken.role = (user as any).role
-        mutableToken.name = user.name
-        mutableToken.email = user.email
-        mutableToken.picture = (user as any).image ?? null
-        mutableToken.bio = (user as any).bio ?? null
+    async signIn({ user, account }: {
+      user: { id?: string; email?: string | null; name?: string | null; image?: string | null }
+      account: { provider?: string } | null
+    }) {
+      // The custom adapter handles user creation and account linking automatically
+      // For Google OAuth, if a user exists with the same email, the adapter will return that user
+      // and the PrismaAdapter will link the Google account to it
+      
+      // Allow all sign-ins - Google OAuth and credentials
+      return true
+    },
+    async jwt({ token, user, trigger, account }: {
+      token: Record<string, unknown>
+      user?: { id?: string; email?: string | null; name?: string | null; image?: string | null; role?: string | null; bio?: string | null }
+      trigger?: string
+      account?: { provider?: string } | null
+    }) {
+      const mutableToken = token as {
+        sub?: string
+        role?: string | null
+        name?: string | null
+        email?: string | null
+        picture?: string | null
+        bio?: string | null
+        [key: string]: unknown
       }
+      
+      // On initial sign-in, fetch user data from database to ensure we have role and all fields
+      if (user && account) {
+        const userId = user.id ?? mutableToken.sub
+        if (userId) {
+          const dbUser = await fetchUserById(userId)
+          if (dbUser) {
+            mutableToken.role = dbUser.role ?? "USER"
+            mutableToken.name = dbUser.username ?? user.name ?? null
+            mutableToken.email = dbUser.email ?? user.email ?? null
+            mutableToken.picture = dbUser.image ?? user.image ?? null
+            mutableToken.bio = "bio" in dbUser ? dbUser.bio ?? null : null
+          } else {
+            // Fallback to user object if DB fetch fails
+            const typedUser = user as {
+              role?: string | null
+              name?: string | null
+              email?: string | null
+              image?: string | null
+              bio?: string | null
+            }
+            mutableToken.role = typedUser.role ?? "USER"
+            mutableToken.name = typedUser.name ?? mutableToken.name ?? null
+            mutableToken.email = typedUser.email ?? mutableToken.email ?? null
+            mutableToken.picture = typedUser.image ?? mutableToken.picture ?? null
+            mutableToken.bio = typedUser.bio ?? mutableToken.bio ?? null
+          }
+        }
+      }
+      
+      // Update token when session is updated
       if (trigger === "update" && mutableToken.sub) {
         const latestUser = await fetchUserById(mutableToken.sub)
         if (latestUser) {
@@ -316,14 +285,32 @@ export const authOptions = {
             "bio" in latestUser ? latestUser.bio ?? mutableToken.bio ?? null : mutableToken.bio ?? null
         }
       }
+      
       return mutableToken
     },
-    async session({ session, token }: { session: any; token: any }) {
-      const mutableToken = token as any
-      const mutableSessionUser = session.user as any
+    async session({ session, token }: {
+      session: { user: { id?: string | null; name?: string | null; email?: string | null; image?: string | null; role?: string | null; bio?: string | null } }
+      token: Record<string, unknown>
+    }) {
+      const mutableToken = token as {
+        sub?: string
+        role?: string | null
+        name?: string | null
+        email?: string | null
+        picture?: string | null
+        bio?: string | null
+      }
+      const mutableSessionUser = session.user as {
+        id?: string | null
+        name?: string | null
+        email?: string | null
+        image?: string | null
+        role?: string | null
+        bio?: string | null
+      }
 
       if (mutableToken) {
-        mutableSessionUser.id = mutableToken.sub ?? mutableSessionUser.id
+        mutableSessionUser.id = mutableToken.sub ?? mutableSessionUser.id ?? null
         if (typeof mutableToken.name === "string") {
           mutableSessionUser.name = mutableToken.name
         }
@@ -339,6 +326,13 @@ export const authOptions = {
           typeof mutableToken.bio === "string" ? mutableToken.bio : mutableSessionUser.bio ?? null
       }
       return session
+    },
+    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      if (new URL(url).origin === baseUrl) return url
+      return baseUrl
     },
   },
   pages: {

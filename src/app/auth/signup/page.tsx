@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { signIn } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -60,6 +60,32 @@ export default function SignUpPage() {
     }
   }, [avatarPreview, avatarCropSrc])
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Handle error from URL parameters (e.g., OAuthAccountNotLinked)
+  useEffect(() => {
+    const error = searchParams.get("error")
+    const callbackUrl = searchParams.get("callbackUrl")
+
+    if (error) {
+      // Clear the error from URL to prevent refresh loops
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete("error")
+      if (callbackUrl) {
+        newUrl.searchParams.delete("callbackUrl")
+      }
+      window.history.replaceState({}, "", newUrl.toString())
+
+      // Show appropriate error message
+      if (error === "OAuthAccountNotLinked") {
+        toast.error("This email is already registered. Please sign in instead, or use a different Google account.")
+      } else if (error === "OAuthCallback") {
+        toast.error("Failed to sign up with Google. Please try again.")
+      } else {
+        toast.error("Authentication failed. Please try again.")
+      }
+    }
+  }, [searchParams])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -233,9 +259,17 @@ export default function SignUpPage() {
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true)
     try {
-      await signIn("google", { callbackUrl: "/" })
-    } catch {
-      toast.error("Failed to sign up with Google")
+      const result = await signIn("google", { 
+        callbackUrl: "/",
+        redirect: true 
+      })
+      // If redirect is false, handle manually
+      if (result && !result.ok && result.error) {
+        toast.error(result.error === "OAuthCallback" ? "Failed to sign up with Google. Please try again." : "Authentication failed")
+      }
+    } catch (error) {
+      console.error("Google sign up error:", error)
+      toast.error("Failed to sign up with Google. Please check your credentials.")
     } finally {
       setIsGoogleLoading(false)
     }
