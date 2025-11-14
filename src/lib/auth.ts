@@ -107,55 +107,64 @@ const customAdapter: Adapter = {
     name?: string | null
     image?: string | null
   }) {
-    const normalizedEmail = user.email.trim().toLowerCase()
-    
-    // Check if user already exists (could be from email/password signup)
-    const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-      select: { id: true, email: true, username: true, image: true },
-    })
-
-    if (existingUser) {
-      // User exists, return it instead of creating a new one
-      // Map username to name for adapter compatibility
-      return {
-        id: existingUser.id,
-        email: existingUser.email,
-        emailVerified: null, // Our schema doesn't have emailVerified
-        name: existingUser.username, // Map username to name
-        image: existingUser.image,
+    try {
+      const normalizedEmail = user.email.trim().toLowerCase()
+      
+      if (!normalizedEmail) {
+        throw new Error("Email is required to create user")
       }
-    }
+      
+      // Check if user already exists (could be from email/password signup)
+      const existingUser = await prisma.user.findUnique({
+        where: { email: normalizedEmail },
+        select: { id: true, email: true, username: true, image: true },
+      })
 
-    // Generate unique username
-    const baseName =
-      user.name ??
-      (user.email ? user.email.split("@")[0] : null) ??
-      `Trader ${Date.now().toString().slice(-6)}`
-    const username = await generateUniqueUsername(String(baseName))
+      if (existingUser) {
+        // User exists, return it instead of creating a new one
+        // Map username to name for adapter compatibility
+        return {
+          id: existingUser.id,
+          email: existingUser.email,
+          emailVerified: null, // Our schema doesn't have emailVerified
+          name: existingUser.username, // Map username to name
+          image: existingUser.image,
+        }
+      }
 
-    // Create new user with username and role
-    const newUser = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        username,
-        image: user.image ?? null,
-        role: "USER",
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        image: true,
-      },
-    })
+      // Generate unique username
+      const baseName =
+        user.name ??
+        (user.email ? user.email.split("@")[0] : null) ??
+        `Trader ${Date.now().toString().slice(-6)}`
+      const username = await generateUniqueUsername(String(baseName))
 
-    return {
-      id: newUser.id,
-      email: newUser.email,
-      emailVerified: null, // Our schema doesn't have emailVerified
-      name: newUser.username, // Map username to name
-      image: newUser.image,
+      // Create new user with username and role
+      const newUser = await prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          username,
+          image: user.image ?? null,
+          role: "USER",
+        },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          image: true,
+        },
+      })
+
+      return {
+        id: newUser.id,
+        email: newUser.email,
+        emailVerified: null, // Our schema doesn't have emailVerified
+        name: newUser.username, // Map username to name
+        image: newUser.image,
+      }
+    } catch (error) {
+      console.error("Error in customAdapter.createUser:", error)
+      throw error
     }
   },
 }
@@ -163,6 +172,8 @@ const customAdapter: Adapter = {
 export const authOptions = {
   adapter: customAdapter,
   secret: process.env.NEXTAUTH_SECRET,
+  // Ensure proper URL handling in production
+  trustHost: true, // Required for Vercel deployments
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -221,12 +232,18 @@ export const authOptions = {
       user: { id?: string; email?: string | null; name?: string | null; image?: string | null }
       account: { provider?: string } | null
     }) {
-      // The custom adapter handles user creation and account linking automatically
-      // For Google OAuth, if a user exists with the same email, the adapter will return that user
-      // and the PrismaAdapter will link the Google account to it
-      
-      // Allow all sign-ins - Google OAuth and credentials
-      return true
+      try {
+        // The custom adapter handles user creation and account linking automatically
+        // For Google OAuth, if a user exists with the same email, the adapter will return that user
+        // and the PrismaAdapter will link the Google account to it
+        
+        // Allow all sign-ins - Google OAuth and credentials
+        return true
+      } catch (error) {
+        console.error("Error in signIn callback:", error)
+        // Still allow sign-in to proceed, but log the error
+        return true
+      }
     },
     async jwt({ token, user, trigger, account }: {
       token: Record<string, unknown>
@@ -328,11 +345,28 @@ export const authOptions = {
       return session
     },
     async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      // Allows callback URLs on the same origin
-      if (new URL(url).origin === baseUrl) return url
-      return baseUrl
+      // Use NEXTAUTH_URL if available, otherwise use baseUrl
+      const nextAuthUrl = process.env.NEXTAUTH_URL || baseUrl
+      
+      // Handle relative URLs
+      if (url.startsWith("/")) {
+        return `${nextAuthUrl}${url}`
+      }
+      
+      // Handle absolute URLs on the same origin
+      try {
+        const urlObj = new URL(url)
+        const baseUrlObj = new URL(nextAuthUrl)
+        if (urlObj.origin === baseUrlObj.origin) {
+          return url
+        }
+      } catch (error) {
+        // If URL parsing fails, return the base URL
+        console.error("Error parsing redirect URL:", error)
+      }
+      
+      // Default to base URL
+      return nextAuthUrl
     },
   },
   pages: {
