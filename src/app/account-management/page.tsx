@@ -294,14 +294,14 @@ export default function AccountManagementPage() {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" className="btn-material-outline text-base">
-                  <Link href="mailto:info@sahanakalanka.com">
-                    <Mail className="mr-2 h-4 w-4" /> info@sahanakalanka.com
+                  <Link href="mailto:info@athenssl.com">
+                    <Mail className="mr-2 h-4 w-4" /> info@athenssl.com
                   </Link>
                 </Button>
               </div>
               <Button asChild variant="secondary" className="w-full bg-slate-800/80 hover:bg-yellow-500 hover:text-slate-900 transition-colors">
-                <Link href="https://www.sahanakalanka.com" target="_blank" rel="noopener noreferrer">
-                  <Globe className="mr-2 h-4 w-4" /> www.sahanakalanka.com
+                <Link href="https://athenssl.com/" target="_blank" rel="noopener noreferrer">
+                  <Globe className="mr-2 h-4 w-4" /> athenssl.com
                 </Link>
               </Button>
             </CardContent>

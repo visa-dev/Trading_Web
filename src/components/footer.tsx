@@ -195,7 +195,13 @@ export function Footer() {
               © {new Date().getFullYear()} Sahan Akalanka Trading Platform. All rights reserved.
             </p>
             <p className="text-gray-500 text-sm">
-              Powered insights and professional trading expertise.
+              Powered by{" "}
+              <a 
+                href="mailto:viraj.sachin.dev@gmail.com" 
+                className="text-yellow-400 hover:text-yellow-300 transition-colors"
+              >
+                Viraj Sachin
+              </a>
             </p>
           </div>
         </motion.div>

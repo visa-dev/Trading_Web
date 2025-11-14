@@ -40,7 +40,7 @@ export default function ContactPage() {
       const body = encodeURIComponent(
         `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
       )
-      const mailtoLink = `mailto:info@sahanakalanka.com?subject=${subject}&body=${body}`
+      const mailtoLink = `mailto:info@athenssl.com?subject=${subject}&body=${body}`
       
       window.open(mailtoLink, '_blank')
       
@@ -100,7 +100,7 @@ export default function ContactPage() {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <Mail className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">info@sahanakalanka.com</span>
+                    <span className="text-gray-300">info@athenssl.com</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Phone className="w-5 h-5 text-yellow-400" />
@@ -124,7 +124,7 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button
-                  onClick={() => window.open('mailto:info@sahanakalanka.com', '_blank')}
+                  onClick={() => window.open('mailto:info@athenssl.com', '_blank')}
                   className="w-full justify-start"
                   variant="outline"
                 >
