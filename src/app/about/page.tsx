@@ -216,11 +216,11 @@ export default function AboutPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-white">
-              <Link href="https://www.sahanakalanka.com" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
-                <Globe className="h-4 w-4 text-yellow-400" /> www.sahanakalanka.com
+              <Link href="https://athenssl.com/" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
+                <Globe className="h-4 w-4 text-yellow-400" /> athenssl.com
               </Link>
-              <Link href="mailto:info@sahanakalanka.com" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
-                <Mail className="h-4 w-4 text-yellow-400" /> info@sahanakalanka.com
+              <Link href="mailto:info@athenssl.com" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
+                <Mail className="h-4 w-4 text-yellow-400" /> info@athenssl.com
               </Link>
               <Link href="tel:+94776387655" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
                 <Phone className="h-4 w-4 text-yellow-400" /> 077 638 7655
