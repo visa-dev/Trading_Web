@@ -2,9 +2,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import GoogleProvider from "next-auth/providers/google"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/db"
-import { Prisma } from "@prisma/client"
 import bcrypt from "bcryptjs"
-import type { Adapter, AdapterUser } from "next-auth/adapters"
+import type { Adapter } from "next-auth/adapters"
 import { generateUniqueUsername } from "@/lib/user"
 
 type BaseUserSelect = {
@@ -101,26 +100,13 @@ const prismaAdapter = PrismaAdapter(prisma)
 
 const adapter: Adapter = {
   ...prismaAdapter,
-  async createUser(profile: AdapterUser) {
+  async createUser(profile) {
     if (!profile?.email) {
       throw new Error("Google profile did not return an email address.")
     }
 
-    const extendedProfile = profile as AdapterUser & {
-      picture?: unknown
-      image?: unknown
-      username?: unknown
-    }
-
     const existingUser = await prisma.user.findUnique({
       where: { email: profile.email },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        image: true,
-        role: true,
-      },
     })
 
     if (existingUser) {
@@ -134,88 +120,36 @@ const adapter: Adapter = {
       }
     }
 
-    const image =
-      typeof extendedProfile.image === "string"
-        ? extendedProfile.image
-        : typeof extendedProfile.picture === "string"
-          ? extendedProfile.picture
-          : null
+    const image = (profile as Record<string, unknown>).image ?? (profile as Record<string, unknown>).picture ?? null
 
     const baseName =
-      (typeof extendedProfile.username === "string" && extendedProfile.username.trim().length > 0
-        ? extendedProfile.username
-        : profile.name) ??
+      (profile as Record<string, unknown>).username ??
+      profile.name ??
       (typeof profile.email === "string" ? profile.email.split("@")[0] : "") ??
       `Trader ${Date.now().toString().slice(-6)}`
 
     const username = await generateUniqueUsername(String(baseName))
 
-    let user
+    const user = await prisma.user.create({
+      data: {
+        email: profile.email,
+        username,
+        image: typeof image === "string" ? image : null,
+        role: "USER",
+      },
+    })
 
-    try {
-      user = await prisma.user.create({
-        data: {
-          email: profile.email,
-          username,
-          image: typeof image === "string" ? image : null,
-          role: "USER",
-        },
-      })
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002" &&
-        Array.isArray(error.meta?.target) &&
-        (error.meta?.target as string[]).includes("username")
-      ) {
-        const fallbackUsername = await generateUniqueUsername(`${baseName} ${Date.now().toString().slice(-4)}`)
-        user = await prisma.user.create({
-          data: {
-            email: profile.email,
-            username: fallbackUsername,
-            image: typeof image === "string" ? image : null,
-            role: "USER",
-          },
-        })
-      } else if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002" &&
-        Array.isArray(error.meta?.target) &&
-        (error.meta?.target as string[]).includes("email")
-      ) {
-        const existing = await prisma.user.findUnique({
-          where: { email: profile.email },
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            image: true,
-            role: true,
-          },
-        })
-
-        if (existing) {
-          return {
-            id: existing.id,
-            email: existing.email,
-            emailVerified: null,
-            name: existing.username,
-            image: existing.image ?? null,
-            role: existing.role,
-          }
-        }
-
-        throw error
-      } else {
-        console.error("Error creating user from OAuth profile:", error)
-        throw error
-      }
-    }
+    const emailVerified =
+      profile.emailVerified instanceof Date
+        ? profile.emailVerified
+        : typeof profile.emailVerified === "string"
+          ? new Date(profile.emailVerified)
+          : null
 
     return {
       id: user.id,
       email: user.email,
-      emailVerified: null,
+      emailVerified,
       name: user.username,
       image: user.image ?? null,
       role: user.role,
