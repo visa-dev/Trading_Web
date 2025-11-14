@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { Navigation } from "@/components/navigation"
 import { ConditionalFloatingChat } from "@/components/conditional-floating-chat"
 import { SessionDebug } from "@/components/session-debug"
