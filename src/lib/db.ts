@@ -24,7 +24,7 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
     },
   },
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-})f
+})
 
 // Only cache Prisma instance in non-serverless environments (local development)
 // In serverless environments (Vercel), each function invocation should have its own instance
