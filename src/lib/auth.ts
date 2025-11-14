@@ -157,6 +157,96 @@ const adapter: Adapter = {
   },
 }
 
+type BaseUserSelect = {
+  id: true
+  email: true
+  username: true
+  role: true
+  image: true
+  passwordHash?: true
+  bio?: true
+}
+
+const baseSelect: BaseUserSelect = {
+  id: true,
+  email: true,
+  username: true,
+  role: true,
+  image: true,
+}
+
+const credentialsSelect: BaseUserSelect & { passwordHash: true } = {
+  ...baseSelect,
+  passwordHash: true,
+  bio: true,
+}
+
+const sessionSelect: BaseUserSelect = {
+  ...baseSelect,
+  bio: true,
+}
+
+const isMissingBioColumnError = (error: unknown) => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string" &&
+    (error as { message: string }).message.includes("The column `User.bio` does not exist")
+  )
+}
+
+const fetchUserForCredentials = async (email: string) => {
+  try {
+    return await prisma.user.findUnique({
+      where: { email },
+      select: credentialsSelect,
+    })
+  } catch (error) {
+    if (isMissingBioColumnError(error)) {
+      const { bio, ...fallbackSelect } = credentialsSelect
+      return prisma.user.findUnique({
+        where: { email },
+        select: fallbackSelect,
+      }) as Promise<{
+        id: string
+        email: string | null
+        username: string | null
+        role: string
+        image: string | null
+        passwordHash: string | null
+        bio?: string | null
+      } | null>
+    }
+    throw error
+  }
+}
+
+const fetchUserById = async (id: string) => {
+  try {
+    return await prisma.user.findUnique({
+      where: { id },
+      select: sessionSelect,
+    })
+  } catch (error) {
+    if (isMissingBioColumnError(error)) {
+      const { bio, ...fallbackSelect } = sessionSelect
+      return prisma.user.findUnique({
+        where: { id },
+        select: fallbackSelect,
+      }) as Promise<{
+        id: string
+        email: string | null
+        username: string | null
+        role: string
+        image: string | null
+        bio?: string | null
+      } | null>
+    }
+    throw error
+  }
+}
+
 export const authOptions = {
   adapter,
   providers: [

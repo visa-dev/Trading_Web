@@ -58,6 +58,16 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
     fetchConversations()
   }, [fetchConversations])
 
+  useEffect(() => {
+    if (sessionUserRole !== "TRADER") return
+
+    const interval = setInterval(() => {
+      fetchConversations()
+    }, 15000)
+
+    return () => clearInterval(interval)
+  }, [sessionUserRole, fetchConversations])
+
   const startNewConversation = async () => {
     try {
       const response = await fetch('/api/conversations', {

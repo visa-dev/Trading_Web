@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
 import { z } from "zod"
 import { prisma } from "@/lib/db"
-import { generateUniqueUsername } from "@/lib/user"
 
 const signUpSchema = z.object({
   name: z.string().trim().min(2, "Name must be at least 2 characters long"),
@@ -18,6 +17,37 @@ const signUpSchema = z.object({
     .optional()
     .or(z.literal("").transform(() => undefined)),
 })
+
+const normalizeName = (name: string) =>
+  name
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/\p{C}+/gu, "")
+
+const generateUniqueUsername = async (name: string) => {
+  const base = normalizeName(name) || `Trader ${Date.now().toString().slice(-6)}`
+  const maxLength = 40
+  const truncatedBase = base.length > maxLength ? base.slice(0, maxLength).trim() : base
+
+  let attempt = 0
+  let candidate = truncatedBase
+
+  while (attempt < 50) {
+    const existing = await prisma.user.findUnique({
+      where: { username: candidate },
+      select: { id: true },
+    })
+    if (!existing) {
+      return candidate
+    }
+    attempt += 1
+    const suffix = ` ${attempt + 1}`
+    const prefixLength = Math.max(1, maxLength - suffix.length)
+    candidate = `${truncatedBase.slice(0, prefixLength)}${suffix}`
+  }
+
+  return `${truncatedBase.slice(0, maxLength - 7)} ${Date.now().toString().slice(-6)}`
+}
 
 export async function POST(request: Request) {
   try {
