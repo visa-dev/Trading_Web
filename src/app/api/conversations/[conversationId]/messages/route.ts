@@ -93,11 +93,23 @@ export async function POST(
 
     const params = await context.params
     const { conversationId } = params
+    
+    // Validate conversationId format
+    if (!conversationId || typeof conversationId !== "string" || conversationId.trim().length === 0) {
+      return NextResponse.json({ error: "Invalid conversation ID" }, { status: 400 })
+    }
+    
     const body = await request.json()
     const { content } = body
 
-    if (!content || content.trim().length === 0) {
+    // Validate content
+    if (!content || typeof content !== "string" || content.trim().length === 0) {
       return NextResponse.json({ error: "Message content is required" }, { status: 400 })
+    }
+
+    // Limit message length to prevent DoS (max 10000 characters)
+    if (content.length > 10000) {
+      return NextResponse.json({ error: "Message content must be less than 10000 characters" }, { status: 400 })
     }
 
     // Verify user has access to this conversation
@@ -115,12 +127,13 @@ export async function POST(
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 })
     }
 
-    // Create the message
+    // Create the message (sanitize content)
+    const sanitizedContent = content.trim().substring(0, 10000)
     const message = await prisma.message.create({
       data: {
-        conversationId,
+        conversationId: conversationId.trim(),
         senderId: session.user.id,
-        content: content.trim(),
+        content: sanitizedContent,
       },
       include: {
         sender: {
@@ -141,7 +154,7 @@ export async function POST(
         id: conversationId
       },
       data: {
-        lastMessage: content.trim(),
+        lastMessage: sanitizedContent,
         updatedAt: new Date(),
         unreadCount: senderIsUser ? { increment: 1 } : { set: 0 },
       }

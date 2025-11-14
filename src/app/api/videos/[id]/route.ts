@@ -36,7 +36,8 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 
     // Check if video exists
     const existingVideo = await prisma.tradingVideo.findUnique({
-      where: { id }
+      where: { id },
+      select: { id: true }
     })
 
     if (!existingVideo) {

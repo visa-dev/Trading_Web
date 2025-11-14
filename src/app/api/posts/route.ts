@@ -82,6 +82,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 })
     }
 
+    // Limit title length
+    if (normalizedTitle.length > 200) {
+      return NextResponse.json({ error: "Title must be less than 200 characters" }, { status: 400 })
+    }
+
+    // Limit description length
+    if (description && typeof description === "string" && description.length > 10000) {
+      return NextResponse.json({ error: "Description must be less than 10000 characters" }, { status: 400 })
+    }
+
     const parseOptionalNumber = (value: unknown): number | null => {
       if (value === null || value === undefined || value === "") return null
       const numeric = typeof value === "number" ? value : Number(value)
