@@ -14,12 +14,20 @@ if (!databaseUrl) {
   )
 }
 
+// Determine if we're in a serverless environment (Vercel, etc.)
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NODE_ENV === 'production'
+
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   datasources: {
     db: {
       url: databaseUrl,
     },
   },
-})
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+})f
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+// Only cache Prisma instance in non-serverless environments (local development)
+// In serverless environments (Vercel), each function invocation should have its own instance
+if (!isServerless) {
+  globalForPrisma.prisma = prisma
+}
