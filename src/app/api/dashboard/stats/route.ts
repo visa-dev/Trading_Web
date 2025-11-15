@@ -21,7 +21,14 @@ const truncateText = (value: string | null | undefined, length = 120) => {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    let session = null
+    try {
+      session = await getServerSession(authOptions)
+    } catch (sessionError) {
+      // If session retrieval fails, return unauthorized
+      console.warn("Session retrieval failed:", sessionError)
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
 
     if (!session?.user?.id || session.user.role !== "TRADER") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

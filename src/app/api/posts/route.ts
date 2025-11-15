@@ -3,9 +3,18 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    let session = null
+    try {
+      session = await getServerSession(authOptions)
+    } catch (sessionError) {
+      // If session retrieval fails, treat as unauthenticated
+      console.warn("Session retrieval failed, treating as unauthenticated:", sessionError)
+    }
+    
     const { searchParams } = new URL(request.url)
     const published = searchParams.get("published")
     const typeParam = searchParams.get("type")
@@ -80,6 +89,16 @@ export async function POST(request: NextRequest) {
 
     if (!normalizedTitle) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 })
+    }
+
+    // Limit title length
+    if (normalizedTitle.length > 200) {
+      return NextResponse.json({ error: "Title must be less than 200 characters" }, { status: 400 })
+    }
+
+    // Limit description length
+    if (description && typeof description === "string" && description.length > 10000) {
+      return NextResponse.json({ error: "Description must be less than 10000 characters" }, { status: 400 })
     }
 
     const parseOptionalNumber = (value: unknown): number | null => {

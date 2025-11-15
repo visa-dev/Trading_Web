@@ -12,6 +12,7 @@ import { User, Mail, Shield, Calendar, Image as ImageIcon, Upload, Trash } from 
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { toast } from "sonner"
 import { getCroppedImage } from "@/lib/crop-image"
+import { BRAND_NAME } from "@/lib/constants"
 
 const revokeObjectUrl = (url: string | null) => {
   if (url && url.startsWith("blob:")) {
@@ -196,8 +197,8 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">My Profile</h1>
-          <p className="text-gray-400">Manage your account information and profile photo</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">My Profile</h1>
+          <p className="text-sm sm:text-base text-gray-400">Manage your account information and profile photo</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -307,7 +308,7 @@ export default function ProfilePage() {
 
                 <div className="pt-4 border-t border-gray-700">
                   <p className="text-xs text-gray-500 text-center">
-                    Account managed by Sahan Akalanka Trading Platform
+                    Account managed by {BRAND_NAME} Trading Platform
                   </p>
                 </div>
               </CardContent>

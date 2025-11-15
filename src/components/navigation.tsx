@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
 import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Copy, Shield } from "lucide-react"
 import Link from "next/link"
+import { BRAND_NAME } from "@/lib/constants"
 
 export function Navigation() {
   const { data: session, status } = useSession()
@@ -94,14 +95,14 @@ export function Navigation() {
                       }
                     }
                   }}
-                  className="text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer"
+                  className="text-xl sm:text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer"
                 >
-                  Sahan Akalanka
+                  {BRAND_NAME}
                 </button>
               ) : (
                 <Link href="/" className="block">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer">
-                    Sahan Akalanka
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white font-heading gradient-text-gold cursor-pointer">
+                    {BRAND_NAME}
                   </h1>
                 </Link>
               )}

@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 import { ArrowLeft, Mail, Lock, Eye, EyeOff, Zap, TrendingUp, Shield, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import { BRAND_NAME } from "@/lib/constants"
 
 export default function SignInPage() {
   const [email, setEmail] = useState("")
@@ -180,12 +181,12 @@ export default function SignInPage() {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back to Home
                 </Link>
-                <h1 className="text-4xl font-bold text-white mb-4">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">
                   Welcome to
-                  <span className="block gradient-text-gold">Sahan Akalanka</span>
+                  <span className="block gradient-text-gold">{BRAND_NAME}</span>
                   Trading Platform
                 </h1>
-                <p className="text-xl text-gray-300">
+                <p className="text-base sm:text-lg md:text-xl text-gray-300">
                   Access professional trading insights and signal-driven analytics
                 </p>
               </motion.div>
@@ -224,7 +225,7 @@ export default function SignInPage() {
                   <Zap className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl font-bold text-white">Sign In</CardTitle>
+                  <CardTitle className="text-xl sm:text-2xl font-bold text-white">Sign In</CardTitle>
                   <CardDescription className="text-gray-400">
                     Enter your credentials to access your account
                   </CardDescription>

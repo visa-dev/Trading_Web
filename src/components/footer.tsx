@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { BarChart3, Mail, Phone, ArrowUp } from "lucide-react"
-import { SiFacebook, SiTelegram, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
+import { BarChart3, Mail, Phone, ArrowUp, Globe, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { SOCIAL_LINKS, BRAND_NAME, BRAND_TAGLINE, BRAND_EMAIL_ALTERNATIVE, BRAND_PHONE_DISPLAY, BRAND_PHONE_LINK, BRAND_WEBSITE, BUSINESS_HOURS } from "@/lib/constants"
 
 export function Footer() {
   const scrollToTop = () => {
@@ -15,27 +15,23 @@ export function Footer() {
     trading: [
       { name: "Performance", href: "/posts" },
       { name: "Videos", href: "/videos" },
-      { name: "Analytics", href: "/analytics" },
+      { name: "Account Management", href: "/account-management" },
+      { name: "Copy Trading", href: "/copy-trading" },
     ],
-    support: [
-      { name: "Help Center", href: "/help" },
-      { name: "Contact", href: "/contact" },
+    resources: [
+      { name: "Academy", href: "/academy" },
+      { name: "About", href: "/about" },
       { name: "Reviews", href: "/reviews" },
+      { name: "Contact", href: "/contact" },
     ],
-    legal: [
-      { name: "Privacy Policy", href: "/privacy" },
-      { name: "Terms of Service", href: "/terms" },
-      { name: "Risk Disclosure", href: "/risk" },
+    external: [
+      { name: "Athens SSL Website", href: BRAND_WEBSITE, external: true },
+      { name: "MyFXBook Profile", href: "https://www.myfxbook.com/members/ATHENSbySAHAN", external: true },
     ],
   }
 
-  const socialLinks = [
-    { name: "Telegram", href: "https://t.me/athenstrading", icon: SiTelegram },
-    { name: "Facebook", href: "https://www.facebook.com/hasakalanka", icon: SiFacebook },
-    { name: "TikTok", href: "https://www.tiktok.com/@saas.me", icon: SiTiktok },
-    { name: "Instagram", href: "https://www.instagram.com/sahan__akalanka", icon: SiInstagram },
-    { name: "YouTube", href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ", icon: SiYoutube },
-  ]
+  // Use shared constants
+  const socialLinks = SOCIAL_LINKS
 
   return (
     <footer className="bg-gradient-to-br from-gray-900 to-black border-t border-gray-800">
@@ -43,7 +39,7 @@ export function Footer() {
         
         {/* Main Footer Content */}
         <div className="py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             
             {/* Brand Section */}
             <motion.div
@@ -57,25 +53,45 @@ export function Footer() {
                 <div className="w-10 h-10 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold text-white font-heading gradient-text-gold">
-                  Sahan Akalanka
+                <span className="text-xl sm:text-2xl font-bold text-white font-heading gradient-text-gold">
+                  {BRAND_NAME}
                 </span>
               </div>
               
-              <p className="text-gray-400 mb-6 leading-relaxed">
-                Professional trading performance tracking and analysis platform with signal-driven insights for the modern investor.
+              <p className="text-sm sm:text-base text-gray-400 mb-6 leading-relaxed">
+                {BRAND_TAGLINE}
               </p>
 
-              <div className="space-y-3">
+              <div className="space-y-3 mb-4">
+                <a 
+                  href={`mailto:${BRAND_EMAIL_ALTERNATIVE}`}
+                  className="flex items-center text-gray-400 hover:text-yellow-400 transition-colors duration-300"
+                >
+                  <Mail className="w-4 h-4 mr-3 text-yellow-400 flex-shrink-0" />
+                  <span className="break-all">{BRAND_EMAIL_ALTERNATIVE}</span>
+                </a>
+                <a 
+                  href={`tel:${BRAND_PHONE_LINK}`}
+                  className="flex items-center text-gray-400 hover:text-yellow-400 transition-colors duration-300"
+                >
+                  <Phone className="w-4 h-4 mr-3 text-yellow-400 flex-shrink-0" />
+                  <span>{BRAND_PHONE_DISPLAY}</span>
+                </a>
                 <div className="flex items-center text-gray-400">
-                  <Mail className="w-4 h-4 mr-3 text-yellow-400" />
-                  <span>info@sahanakalanka.com</span>
-                </div>
-                <div className="flex items-center text-gray-400">
-                  <Phone className="w-4 h-4 mr-3 text-yellow-400" />
-                  <span>+94 77 638 7655</span>
+                  <Clock className="w-4 h-4 mr-3 text-yellow-400 flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">{BUSINESS_HOURS}</span>
                 </div>
               </div>
+
+              <a
+                href={BRAND_WEBSITE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-yellow-400 hover:text-yellow-300 transition-colors duration-300 text-sm font-medium"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                Visit {BRAND_NAME} Website
+              </a>
             </motion.div>
 
             {/* Trading Links */}
@@ -100,16 +116,16 @@ export function Footer() {
               </ul>
             </motion.div>
 
-            {/* Support Links */}
+            {/* Resources Links */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-lg font-semibold text-white mb-6">Support</h3>
+              <h3 className="text-lg font-semibold text-white mb-6">Resources</h3>
               <ul className="space-y-3">
-                {footerLinks.support.map((link) => (
+                {footerLinks.resources.map((link) => (
                   <li key={link.name}>
                     <Link 
                       href={link.href}
@@ -120,28 +136,26 @@ export function Footer() {
                   </li>
                 ))}
               </ul>
-            </motion.div>
-
-            {/* Legal Links */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-lg font-semibold text-white mb-6">Legal</h3>
-              <ul className="space-y-3">
-                {footerLinks.legal.map((link) => (
-                  <li key={link.name}>
-                    <Link 
-                      href={link.href}
-                      className="text-gray-400 hover:text-yellow-400 transition-colors duration-300"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              
+              {/* External Links */}
+              <div className="mt-6 pt-6 border-t border-gray-800">
+                <h4 className="text-sm font-semibold text-gray-300 mb-4">External Links</h4>
+                <ul className="space-y-2">
+                  {footerLinks.external.map((link) => (
+                    <li key={link.name}>
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-yellow-400 transition-colors duration-300 flex items-center text-sm"
+                      >
+                        {link.name}
+                        <ArrowUp className="w-3 h-3 ml-1 rotate-45" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </motion.div>
           </div>
 
@@ -192,7 +206,7 @@ export function Footer() {
         >
           <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
             <p className="text-gray-400 text-sm mb-4 md:mb-0">
-              © {new Date().getFullYear()} Sahan Akalanka Trading Platform. All rights reserved.
+              © {new Date().getFullYear()} {BRAND_NAME} Trading Platform. All rights reserved.
             </p>
             <p className="text-gray-500 text-sm">
               Powered by{" "}

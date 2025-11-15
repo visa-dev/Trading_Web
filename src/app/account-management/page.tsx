@@ -18,72 +18,13 @@ import {
   Mail,
   Globe
 } from "lucide-react"
-import { SiTelegram, SiFacebook, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
+import { ACCOUNT_PERFORMANCE_LINKS, SOCIAL_LINKS, TRADING_HIGHLIGHTS, HOW_IT_WORKS, ACCOUNT_REQUIREMENTS, BRAND_NAME, BRAND_EMAIL, BRAND_PHONE_LINK, BRAND_PHONE_SHORT, BRAND_WEBSITE } from "@/lib/constants"
 
-const howItWorks = [
-  {
-    title: "You Own the Account",
-    description:
-      "Open a trading account in your name with a trusted regulated broker like NordFX or Exness. Your funds always remain in your control.",
-    details: "I execute trades on your behalf—withdrawal access stays with you."
-  },
-  {
-    title: "Secure Connection",
-    description:
-      "I connect via copy trading or investor (read-only) access. I never receive direct fund control or withdrawal permissions.",
-    details: "Risk management and execution are handled transparently." 
-  },
-  {
-    title: "Live Transparency",
-    description:
-      "You can monitor every position in real-time on MT4/MT5. I also provide verified performance via MyFXBook or FXBlue.",
-    details: "Stay informed with live dashboards and analytics."
-  },
-  {
-    title: "Profit Sharing",
-    description:
-      "We settle profits weekly or monthly based on results. A 50/50 split is standard, with flexibility for account size and goals.",
-    details: "Simple, fair, performance-based compensation."
-  }
-]
-
-const tradingHighlights = [
-  { icon: Target, label: "Daily Risk", value: "1% – 2% per trade" },
-  { icon: TrendingUp, label: "Weekly Growth", value: "4% – 9% average" },
-  { icon: BarChart3, label: "Primary Market", value: "Gold (XAU/USD)" },
-  { icon: CheckCircle, label: "Strategy", value: "ICT • Price Action • Smart Money" }
-]
-
-const socialLinks = [
-  { label: "Telegram", href: "https://t.me/athenstrading", icon: SiTelegram },
-  { label: "Facebook", href: "https://www.facebook.com/hasakalanka", icon: SiFacebook },
-  { label: "TikTok", href: "https://www.tiktok.com/@saas.me", icon: SiTiktok },
-  { label: "Instagram", href: "https://www.instagram.com/sahan__akalanka", icon: SiInstagram },
-  { label: "YouTube", href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ", icon: SiYoutube }
-]
-
-const performanceLinks = [
-  {
-    label: "Account Management Performance",
-    description: "Primary SocialTradeTools dashboard showcasing managed accounts",
-    href: "https://my.socialtradertools.com/view/LktDiabPtIzhEnNt",
-  },
-  {
-    label: "Signal Intelligence Dashboard",
-    description: "SocialTradeTools live performance stream with verified statistics",
-    href: "https://my.socialtradertools.com/view/MyimZHO9sgMkMxiw",
-  },
-  {
-    label: "Diversified Strategy Feed",
-    description: "Cross-market performance feed highlighting diversified trades",
-    href: "https://my.socialtradertools.com/view/C3pe6Rbmad180C1Y",
-  },
-  {
-    label: "Advanced Equity Analytics",
-    description: "Extended account analytics and equity growth tracking",
-    href: "https://my.socialtradertools.com/view/BdkyYOHAqk9WJPFt",
-  },
-]
+// Use shared constants
+const performanceLinks = ACCOUNT_PERFORMANCE_LINKS
+const socialLinks = SOCIAL_LINKS
+const tradingHighlights = TRADING_HIGHLIGHTS
+const howItWorks = HOW_IT_WORKS
 
 export default function AccountManagementPage() {
   const [showPerformanceLinks, setShowPerformanceLinks] = useState(false)
@@ -91,19 +32,19 @@ export default function AccountManagementPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 py-16">
       <div className="max-w-6xl mx-auto px-4 space-y-14">
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
+          <div className="space-y-3 sm:space-y-4 flex-1">
             <span className="inline-flex items-center text-xs font-semibold uppercase tracking-[0.3em] text-yellow-400/90">
-              <Shield className="mr-2 h-4 w-4" /> Account Management by Sahan Akalanka
+              <Shield className="mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Account Management by {BRAND_NAME}
             </span>
-            <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
               Smart, Transparent & Profitable Gold Trading — Managed Personally by Sahan
             </h1>
-            <p className="text-lg text-gray-300 max-w-2xl">
+            <p className="text-base sm:text-lg text-gray-300 max-w-2xl">
               Welcome to my Account Management Service, designed for traders who want consistent, realistic growth without the stress of daily execution. You maintain full control while I deliver expert trading decisions rooted in ICT, Price Action, and Smart Money concepts.
             </p>
           </div>
-          <Button asChild variant="outline" className="btn-material-outline self-start">
+          <Button asChild variant="outline" className="btn-material-outline self-start md:self-start mt-2 md:mt-0">
             <Link href="/">
               <ArrowLeft className="mr-2 h-4 w-4" /> Back to Home
             </Link>
@@ -112,8 +53,8 @@ export default function AccountManagementPage() {
 
         <Card className="card-material border border-slate-800/60 bg-slate-900/60">
           <CardHeader className="space-y-3">
-            <CardTitle className="text-white text-2xl flex items-center gap-2">
-              <LineChart className="h-6 w-6 text-yellow-400" /> How It Works
+            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+              <LineChart className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> How It Works
             </CardTitle>
             <CardDescription className="text-gray-300">
               A secure, collaborative partnership that keeps your capital safe while I handle execution and strategy.
@@ -134,8 +75,8 @@ export default function AccountManagementPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="card-material border border-slate-800/60 bg-slate-900/60 lg:col-span-2">
             <CardHeader className="space-y-3">
-              <CardTitle className="text-white text-2xl flex items-center gap-2">
-                <Target className="h-6 w-6 text-yellow-400" /> My Trading Approach
+              <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> My Trading Approach
               </CardTitle>
               <CardDescription className="text-gray-300">
                 Focused, data-backed execution tailored to each account while protecting capital.
@@ -166,8 +107,8 @@ export default function AccountManagementPage() {
 
           <Card className="card-material border border-slate-800/60 bg-slate-900/60">
             <CardHeader>
-              <CardTitle className="text-white text-2xl flex items-center gap-2">
-                <Lock className="h-6 w-6 text-yellow-400" /> Why Choose Me
+              <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+                <Lock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> Why Choose Me
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -194,8 +135,8 @@ export default function AccountManagementPage() {
 
         <Card className="card-material border border-slate-800/60 bg-slate-900/60">
           <CardHeader>
-            <CardTitle className="text-white text-2xl flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-yellow-400" /> Account Requirements
+            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> Account Requirements
             </CardTitle>
             <CardDescription className="text-gray-300">
               Choose a starting balance that aligns with your goals. Results may vary with market conditions.
@@ -203,18 +144,17 @@ export default function AccountManagementPage() {
           </CardHeader>
           <CardContent className="overflow-hidden">
             <div className="grid grid-cols-1 md:grid-cols-3 text-center border border-slate-800/70 rounded-2xl overflow-hidden">
-              <div className="bg-slate-900/80 p-6">
-                <p className="text-sm uppercase tracking-wide text-gray-400">Minimum Balance</p>
-                <p className="mt-2 text-2xl font-semibold text-white">$1,000+</p>
-              </div>
-              <div className="bg-slate-900/70 p-6 border-y md:border-y-0 md:border-x border-slate-800/70">
-                <p className="text-sm uppercase tracking-wide text-gray-400">Profit Share</p>
-                <p className="mt-2 text-2xl font-semibold text-white">50 / 50</p>
-              </div>
-              <div className="bg-slate-900/80 p-6">
-                <p className="text-sm uppercase tracking-wide text-gray-400">Expected Monthly Growth</p>
-                <p className="mt-2 text-2xl font-semibold text-white">20% – 40%</p>
-              </div>
+              {ACCOUNT_REQUIREMENTS.map((req, index) => (
+                <div
+                  key={req.label}
+                  className={`bg-slate-900/80 p-6 ${
+                    index === 1 ? "border-y md:border-y-0 md:border-x border-slate-800/70" : ""
+                  } ${index === 1 ? "bg-slate-900/70" : ""}`}
+                >
+                  <p className="text-sm uppercase tracking-wide text-gray-400">{req.label}</p>
+                  <p className="mt-2 text-2xl font-semibold text-white">{req.value}</p>
+                </div>
+              ))}
             </div>
             <p className="mt-4 text-xs text-gray-500">
               📊 Results are based on historical performance and prevailing market conditions. Trading involves risk and past performance does not guarantee future returns.
@@ -243,25 +183,25 @@ export default function AccountManagementPage() {
         {showPerformanceLinks && (
           <Card className="card-material border border-slate-800/60 bg-slate-900/60">
             <CardHeader>
-              <CardTitle className="text-white text-2xl">Account Management Performance</CardTitle>
-              <CardDescription className="text-gray-300">
+              <CardTitle className="text-xl sm:text-2xl text-white px-4 sm:px-0">Account Management Performance</CardTitle>
+              <CardDescription className="text-gray-300 px-4 sm:px-0">
                 Choose any of the verified SocialTradeTools dashboards to review managed account performance.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-4 sm:px-6">
               {performanceLinks.map((link) => (
                 <div
                   key={link.href}
-                  className="rounded-xl border border-slate-800/60 bg-slate-900/40 px-5 py-4"
+                  className="rounded-xl border border-slate-800/60 bg-slate-900/40 px-4 sm:px-5 py-4"
                 >
-                  <p className="text-sm font-semibold text-yellow-400 uppercase tracking-wide">
+                  <p className="text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wide">
                     {link.label}
                   </p>
-                  <p className="text-sm text-gray-300 mt-1">{link.description}</p>
+                  <p className="text-xs sm:text-sm text-gray-300 mt-1">{link.description}</p>
                   <Button
                     asChild
                     size="sm"
-                    className="btn-material mt-3"
+                    className="btn-material mt-3 text-xs sm:text-sm"
                   >
                     <Link href={link.href} target="_blank" rel="noopener noreferrer">
                       View Dashboard
@@ -276,8 +216,8 @@ export default function AccountManagementPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="card-material border border-slate-800/60 bg-slate-900/60">
             <CardHeader>
-              <CardTitle className="text-white text-2xl flex items-center gap-2">
-                <TrendingUp className="h-6 w-6 text-yellow-400" /> Start Your Journey Today
+              <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> Start Your Journey Today
               </CardTitle>
               <CardDescription className="text-gray-300">
                 Ready for managed performance? Let’s align your goals, risk, and execution plan.
@@ -288,19 +228,19 @@ export default function AccountManagementPage() {
                 When you’re ready to scale safely and consistently, I’ll walk you through opening your broker account, connecting securely, and setting profit-sharing expectations.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Button asChild className="btn-material text-base">
-                  <Link href="tel:+94776387655">
-                    <Phone className="mr-2 h-4 w-4" /> Call: 077 638 7655
+                <Button asChild className="btn-material text-sm sm:text-base">
+                  <Link href={`tel:${BRAND_PHONE_LINK}`}>
+                    <Phone className="mr-2 h-4 w-4" /> Call: {BRAND_PHONE_SHORT}
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="btn-material-outline text-base">
-                  <Link href="mailto:info@athenssl.com">
-                    <Mail className="mr-2 h-4 w-4" /> info@athenssl.com
+                <Button asChild variant="outline" className="btn-material-outline text-sm sm:text-base">
+                  <Link href={`mailto:${BRAND_EMAIL}`}>
+                    <Mail className="mr-2 h-4 w-4" /> <span className="truncate">{BRAND_EMAIL}</span>
                   </Link>
                 </Button>
               </div>
               <Button asChild variant="secondary" className="w-full bg-slate-800/80 hover:bg-yellow-500 hover:text-slate-900 transition-colors">
-                <Link href="https://athenssl.com/" target="_blank" rel="noopener noreferrer">
+                <Link href={BRAND_WEBSITE} target="_blank" rel="noopener noreferrer">
                   <Globe className="mr-2 h-4 w-4" /> athenssl.com
                 </Link>
               </Button>
@@ -309,8 +249,8 @@ export default function AccountManagementPage() {
 
           <Card className="card-material border border-slate-800/60 bg-slate-900/60">
             <CardHeader>
-              <CardTitle className="text-white text-2xl flex items-center gap-2">
-                <LineChart className="h-6 w-6 text-yellow-400" /> Follow Live Results & Updates
+              <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+                <LineChart className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> Follow Live Results & Updates
               </CardTitle>
               <CardDescription className="text-gray-300">
                 Stay close to the markets and watch trades unfold in real time.
