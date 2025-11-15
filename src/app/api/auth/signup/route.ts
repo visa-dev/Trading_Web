@@ -13,27 +13,27 @@ const signUpSchema = z.object({
     .regex(/[A-Za-z]/, "Password must contain letters")
     .regex(/[0-9]/, "Password must contain numbers"),
   imageUrl: z
-    .string()
-    .url("Profile image URL is invalid")
+    .union([
+      z.string().url("Profile image URL is invalid"),
+      z.literal(""),
+      z.null(),
+      z.undefined(),
+    ])
     .optional()
-    .or(z.literal("").transform(() => undefined)),
+    .transform((val) => (val === "" || val === null || val === undefined ? undefined : val)),
 })
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    console.log("[SIGNUP] Received signup request:", { email: body.email, hasName: !!body.name })
-    
     const parsed = signUpSchema.safeParse(body)
 
     if (!parsed.success) {
       const errorMessage = parsed.error.issues[0]?.message ?? "Invalid request payload"
-      console.error("[SIGNUP] Validation error:", parsed.error.issues)
       return NextResponse.json({ error: errorMessage }, { status: 400 })
     }
 
     const { name, email, password, imageUrl } = parsed.data
-    console.log("[SIGNUP] Processing signup for:", email)
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -41,16 +41,11 @@ export async function POST(request: Request) {
     })
 
     if (existingUser) {
-      console.log("[SIGNUP] User already exists:", email)
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 })
     }
 
-    console.log("[SIGNUP] Generating username for:", name)
     const username = await generateUniqueUsername(name)
-    console.log("[SIGNUP] Generated username:", username)
-    
     const passwordHash = await bcrypt.hash(password, 12)
-    console.log("[SIGNUP] Password hashed, creating user...")
 
     const user = await prisma.user.create({
       data: {
@@ -68,17 +63,8 @@ export async function POST(request: Request) {
       },
     })
 
-    console.log("[SIGNUP] User created successfully:", { id: user.id, email: user.email, username: user.username })
     return NextResponse.json({ user }, { status: 201 })
   } catch (error) {
-    console.error("[SIGNUP] Error during sign up:", error)
-    if (error instanceof Error) {
-      console.error("[SIGNUP] Error details:", {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      })
-    }
     return NextResponse.json(
       { 
         error: "Internal server error",

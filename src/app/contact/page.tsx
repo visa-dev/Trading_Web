@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Phone, Mail, Clock, Send, User, MessageSquare, CheckCircle } from "lucide-react"
 import { toast } from "sonner"
+import { BRAND_NAME, BRAND_EMAIL, BRAND_PHONE_DISPLAY, BUSINESS_HOURS } from "@/lib/constants"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -40,7 +41,7 @@ export default function ContactPage() {
       const body = encodeURIComponent(
         `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
       )
-      const mailtoLink = `mailto:info@athenssl.com?subject=${subject}&body=${body}`
+      const mailtoLink = `mailto:${BRAND_EMAIL}?subject=${subject}&body=${body}`
       
       window.open(mailtoLink, '_blank')
       
@@ -63,11 +64,11 @@ export default function ContactPage() {
           transition={{ duration: 0.8 }}
           className="text-center mb-16"
         >
-          <h1 className="text-5xl font-bold text-white font-heading gradient-text-gold mb-6">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white font-heading gradient-text-gold mb-6 px-4">
             Contact Us
           </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Get in touch with Sahan Akalanka for trading insights, questions, or collaboration opportunities
+          <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto px-4">
+            Get in touch with {BRAND_NAME} for trading insights, questions, or collaboration opportunities
           </p>
         </motion.div>
 
@@ -82,8 +83,8 @@ export default function ContactPage() {
             {/* Trader Info Card */}
             <Card className="card-material">
               <CardHeader>
-                <CardTitle className="text-2xl text-white flex items-center">
-                  <User className="w-6 h-6 mr-3 text-yellow-400" />
+                <CardTitle className="text-xl sm:text-2xl text-white flex items-center flex-wrap gap-2">
+                  <User className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
                   Trader Information
                 </CardTitle>
               </CardHeader>
@@ -93,22 +94,22 @@ export default function ContactPage() {
                     <span className="text-white font-bold text-lg">SA</span>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-white">Sahan Akalanka</h3>
-                    <p className="text-gray-400">Professional Trader & Mentor</p>
+                    <h3 className="text-lg sm:text-xl font-semibold text-white">{BRAND_NAME}</h3>
+                    <p className="text-sm sm:text-base text-gray-400">Professional Trader & Mentor</p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <Mail className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">info@athenssl.com</span>
+                    <span className="text-gray-300">{BRAND_EMAIL}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Phone className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">+94 77 638 7655</span>
+                    <span className="text-gray-300">{BRAND_PHONE_DISPLAY}</span>
                   </div>
                   <div className="flex items-center space-x-3">
                     <Clock className="w-5 h-5 text-yellow-400" />
-                    <span className="text-gray-300">Mon-Fri: 9:00 AM - 6:00 PM EST</span>
+                    <span className="text-gray-300">{BUSINESS_HOURS}</span>
                   </div>
                 </div>
               </CardContent>
@@ -124,7 +125,7 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button
-                  onClick={() => window.open('mailto:info@athenssl.com', '_blank')}
+                  onClick={() => window.open(`mailto:${BRAND_EMAIL}`, '_blank')}
                   className="w-full justify-start"
                   variant="outline"
                 >

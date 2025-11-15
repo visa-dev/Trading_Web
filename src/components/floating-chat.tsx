@@ -8,6 +8,44 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { addCacheBusting } from "@/lib/chat-utils"
 
+// Helper function to format message content with clickable links
+function formatMessageContent(content: string): string {
+  if (!content) return ""
+  
+  // If content already has HTML links (from auto-reply), return as is
+  if (content.includes("<a href=")) {
+    return content
+  }
+  
+  // Convert plain text URLs to HTML links
+  const urlRegex = /(https?:\/\/[^\s]+)/g
+  const phoneRegex = /(\+?\d{1,4}[\s-]?\(?\d{1,4}\)?[\s-]?\d{1,4}[\s-]?\d{1,4}[\s-]?\d{1,9})/g
+  const emailRegex = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g
+  
+  let formatted = content
+  
+  // Replace newlines with <br>
+  formatted = formatted.replace(/\n/g, "<br>")
+  
+  // Replace plain URLs with clickable links
+  formatted = formatted.replace(urlRegex, (url) => {
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #f59e0b; text-decoration: underline; word-break: break-all;">${url}</a>`
+  })
+  
+  // Replace phone numbers with tel: links
+  formatted = formatted.replace(phoneRegex, (phone) => {
+    const telLink = phone.replace(/\s|-|\(|\)/g, "")
+    return `<a href="tel:${telLink}" style="color: #f59e0b; text-decoration: underline;">${phone}</a>`
+  })
+  
+  // Replace emails with mailto: links
+  formatted = formatted.replace(emailRegex, (email) => {
+    return `<a href="mailto:${email}" style="color: #f59e0b; text-decoration: underline;">${email}</a>`
+  })
+  
+  return formatted
+}
+
 interface Message {
   id: string
   content: string
@@ -78,7 +116,7 @@ export function FloatingChat() {
             senderId: msg.senderId,
             timestamp: new Date(msg.createdAt),
             sender: {
-              username: isTrader ? "Signal Expert" : msg.sender.username,
+              username: isTrader ? "Sahan Akalanka" : msg.sender.username,
               image: msg.sender.image,
               role: msg.sender.role
             }
@@ -140,11 +178,11 @@ export function FloatingChat() {
         if (data.message === "Conversation created") {
           const welcomeMessage: Message = {
             id: "welcome",
-            content: "Welcome to the Signal Expert trading assistant! How can I support you today?",
+            content: "Welcome to Sahan Akalanka's trading assistant! How can I support you today?",
             senderId: "trader",
             timestamp: new Date(),
             sender: {
-              username: "Signal Expert",
+              username: "Sahan Akalanka",
               image: null,
               role: "TRADER"
             }
@@ -332,8 +370,8 @@ export function FloatingChat() {
                     <Bot className="w-5 h-5 text-yellow-600" />
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">Signal Expert</h3>
-                    <p className="text-xs text-yellow-100">Virtual Trading Assistant</p>
+                    <h3 className="text-white font-semibold">Sahan Akalanka</h3>
+                    <p className="text-xs text-yellow-100">Professional Trading Expert</p>
                   </div>
                 </div>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
@@ -366,7 +404,12 @@ export function FloatingChat() {
                             : "bg-gray-800 text-gray-100 rounded-bl-md"
                         }`}
                       >
-                        <p className="text-sm leading-relaxed">{message.content}</p>
+                        <div 
+                          className="text-sm leading-relaxed"
+                          dangerouslySetInnerHTML={{ 
+                            __html: formatMessageContent(message.content)
+                          }}
+                        />
                         <p className={`text-xs opacity-70 mt-1 ${isUserMessage ? "text-right" : "text-left"}`}>
                           {message.timestamp ? message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                         </p>

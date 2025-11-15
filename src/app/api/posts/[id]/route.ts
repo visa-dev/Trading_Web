@@ -58,7 +58,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     // Check if post exists
     const existingPost = await prisma.performancePost.findUnique({
-      where: { id }
+      where: { id },
+      select: { id: true, type: true }
     })
 
     if (!existingPost) {
@@ -99,11 +100,19 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       if (typeof title !== "string" || !title.trim()) {
         return NextResponse.json({ error: "Title is required" }, { status: 400 })
       }
-      updateData.title = title.trim()
+      const trimmedTitle = title.trim()
+      if (trimmedTitle.length > 200) {
+        return NextResponse.json({ error: "Title must be less than 200 characters" }, { status: 400 })
+      }
+      updateData.title = trimmedTitle
     }
 
     if (description !== undefined) {
-      updateData.description = normalizeOptionalString(description)
+      const normalized = normalizeOptionalString(description)
+      if (normalized && normalized.length > 10000) {
+        return NextResponse.json({ error: "Description must be less than 10000 characters" }, { status: 400 })
+      }
+      updateData.description = normalized
     }
 
     if (imageUrl !== undefined) {
@@ -193,7 +202,8 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 
     // Check if post exists
     const existingPost = await prisma.performancePost.findUnique({
-      where: { id }
+      where: { id },
+      select: { id: true }
     })
 
     if (!existingPost) {
