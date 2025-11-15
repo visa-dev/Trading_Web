@@ -174,16 +174,25 @@ export async function POST(
       })
 
       if (!existingTraderReply && conversation.traderId) {
+        const { BRAND_NAME, SOCIAL_LINKS, BRAND_PHONE_SHORT, BRAND_EMAIL_ALTERNATIVE, BRAND_PHONE_LINK } = await import("@/lib/constants")
+        
+        // Get contact info from social links
+        const telegramLink = SOCIAL_LINKS.find(s => s.label === "Telegram")
+        const facebookLink = SOCIAL_LINKS.find(s => s.label === "Facebook")
+        const instagramLink = SOCIAL_LINKS.find(s => s.label === "Instagram")
+        
+        // Create formatted message with clickable links using HTML
         const autoReplyContent = [
-          "Sahan Akalanka will contact you within 24 hours.",
+          `👋 ${BRAND_NAME} will contact you within 24 hours.`,
           "",
-          "For urgent matters you can reach out via:",
-          "• Telegram: https://t.me/athenstrading",
-          "• Facebook: https://www.facebook.com/hasakalanka",
-          "• Instagram: https://www.instagram.com/sahan__akalanka",
-          "• Call / WhatsApp: +94 77 638 7655",
-          "• Email: info@sahanakalanka.com",
-        ].join("\n")
+          "📞 For urgent matters, you can reach out via:",
+          "",
+          telegramLink ? `🔹 <a href="${telegramLink.href}" target="_blank" rel="noopener noreferrer" style="color: #f59e0b; text-decoration: underline;">Telegram: ${telegramLink.href}</a>` : "",
+          facebookLink ? `🔹 <a href="${facebookLink.href}" target="_blank" rel="noopener noreferrer" style="color: #f59e0b; text-decoration: underline;">Facebook: ${facebookLink.href}</a>` : "",
+          instagramLink ? `🔹 <a href="${instagramLink.href}" target="_blank" rel="noopener noreferrer" style="color: #f59e0b; text-decoration: underline;">Instagram: ${instagramLink.href}</a>` : "",
+          `🔹 <a href="tel:${BRAND_PHONE_LINK}" style="color: #f59e0b; text-decoration: underline;">Call / WhatsApp: ${BRAND_PHONE_SHORT}</a>`,
+          `🔹 <a href="mailto:${BRAND_EMAIL_ALTERNATIVE}" style="color: #f59e0b; text-decoration: underline;">Email: ${BRAND_EMAIL_ALTERNATIVE}</a>`,
+        ].filter(Boolean).join("\n")
 
         autoReply = await prisma.message.create({
           data: {

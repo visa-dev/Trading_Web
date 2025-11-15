@@ -13,8 +13,7 @@ import {
   scaleBounceVariants,
   floatVariants,
 } from "@/lib/animations"
-import { SiFacebook, SiTelegram, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
-
+import { SOCIAL_LINKS, BRAND_NAME } from "@/lib/constants"
 import profile from "@/assets/profile.jpg"
 
 type TraderStats = {
@@ -118,38 +117,21 @@ export function Hero() {
     { icon: Users, text: "500+ Clients Served", color: "text-purple-400" }
   ]
 
-  const socialLinks = [
-    {
-      href: "https://www.facebook.com/hasakalanka",
-      label: "Facebook",
-      icon: SiFacebook,
-      gradient: "from-blue-500/20 to-sky-500/20"
-    },
-    {
-      href: "https://t.me/athenstrading",
-      label: "Telegram",
-      icon: SiTelegram,
-      gradient: "from-cyan-500/20 to-blue-500/20"
-    },
-    {
-      href: "https://www.tiktok.com/@saas.me",
-      label: "TikTok",
-      icon: SiTiktok,
-      gradient: "from-pink-500/20 to-purple-500/20"
-    },
-    {
-      href: "https://www.instagram.com/sahan__akalanka",
-      label: "Instagram",
-      icon: SiInstagram,
-      gradient: "from-rose-500/20 to-amber-500/20"
-    },
-    {
-      href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ",
-      label: "YouTube",
-      icon: SiYoutube,
-      gradient: "from-red-500/20 to-orange-500/20"
-    },
-  ]
+  // Use shared constants with gradient mapping
+  const gradientMap: Record<string, string> = {
+    "Facebook": "from-blue-500/20 to-sky-500/20",
+    "Telegram": "from-cyan-500/20 to-blue-500/20",
+    "TikTok": "from-pink-500/20 to-purple-500/20",
+    "Instagram": "from-rose-500/20 to-amber-500/20",
+    "YouTube": "from-red-500/20 to-orange-500/20",
+  }
+  
+  const socialLinks = SOCIAL_LINKS.map(social => ({
+    href: social.href,
+    label: social.label,
+    icon: social.icon,
+    gradient: gradientMap[social.label] || "from-gray-500/20 to-gray-600/20"
+  }))
 
   return (
     <motion.div 
@@ -217,7 +199,7 @@ export function Hero() {
               className="relative"
               variants={itemVariants}
             >
-              <div className="relative w-56 h-56 sm:w-72 sm:h-72 lg:w-80 lg:h-80 mx-auto lg:mx-0">
+              <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto lg:mx-0">
                 <motion.div
                   className="w-full h-full rounded-3xl overflow-hidden shadow-2xl"
                   whileHover={{ scale: 1.02 }}
@@ -225,7 +207,7 @@ export function Hero() {
                 >
                   <img
                     src={profile.src as string}
-                    alt="Sahan Akalanka - Professional Trader"
+                    alt={`${BRAND_NAME} - Professional Trader`}
                     className="w-full h-full object-cover"
                   />
                 </motion.div>
@@ -257,10 +239,10 @@ export function Hero() {
               variants={containerVariants}
             >
               <motion.div variants={itemVariants}>
-                <h2 className="text-3xl font-bold text-white dark:text-white light:text-navy-900 mb-2">
-                  Sahan Akalanka
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white dark:text-white light:text-navy-900 mb-2">
+                  {BRAND_NAME}
                 </h2>
-                <p className="text-xl text-yellow-400 dark:text-yellow-400 light:text-yellow-600 font-medium">
+                <p className="text-base sm:text-lg md:text-xl text-yellow-400 dark:text-yellow-400 light:text-yellow-600 font-medium">
                   Professional Trading Expert & Market Analyst
                 </p>
               </motion.div>

@@ -196,7 +196,7 @@ export function ConversationsList({ onSelectConversation, selectedConversationId
                 : conversation.trader
               const displayName = viewingAsTrader
                 ? (otherUser?.username || "User")
-                : "Signal Expert"
+                : "Sahan Akalanka"
 
               const showUnreadBadge = viewingAsTrader && (conversation.unreadCount ?? 0) > 0
               const unreadDisplay =

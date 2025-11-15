@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { LoadingSpinner } from "@/components/loading-spinner"
+import { BRAND_NAME } from "@/lib/constants"
 
 interface Review {
   id: string
@@ -157,13 +158,13 @@ export function ReviewsCarousel({ reviews: propReviews }: ReviewsCarouselProps) 
             <Star className="w-5 h-5 text-yellow-400" />
             <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Client Reviews</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 px-4">
             What Our
             <span className="block gradient-text-gold animate-gradient" style={{ backgroundSize: "200% 200%" }}>
               Clients Say
             </span>
           </h2>
-          <p className="text-lg text-gray-300 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-300 max-w-3xl mx-auto px-4">
             Real feedback from our community of traders
           </p>
         </motion.div>
@@ -296,7 +297,7 @@ export function ReviewsCarousel({ reviews: propReviews }: ReviewsCarouselProps) 
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-white">Write a Review</DialogTitle>
             <DialogDescription className="text-gray-400">
-              Share your experience with Sahan Akalanka&apos;s trading services
+              Share your experience with {BRAND_NAME}&apos;s trading services
             </DialogDescription>
           </DialogHeader>
 

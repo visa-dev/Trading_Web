@@ -38,8 +38,8 @@ export default function ChatPage() {
     <div className="min-h-screen hero-bg">
       <div className="max-w-7xl mx-auto container-responsive py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Messages</h1>
-          <p className="text-gray-300 mt-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">Messages</h1>
+          <p className="text-sm sm:text-base text-gray-300 mt-2">
             Manage conversations with users and provide trading insights
           </p>
         </div>

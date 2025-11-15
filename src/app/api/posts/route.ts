@@ -3,9 +3,18 @@ import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    let session = null
+    try {
+      session = await getServerSession(authOptions)
+    } catch (sessionError) {
+      // If session retrieval fails, treat as unauthenticated
+      console.warn("Session retrieval failed, treating as unauthenticated:", sessionError)
+    }
+    
     const { searchParams } = new URL(request.url)
     const published = searchParams.get("published")
     const typeParam = searchParams.get("type")

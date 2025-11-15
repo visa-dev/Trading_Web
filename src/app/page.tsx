@@ -16,6 +16,7 @@ import { motion } from "framer-motion"
 import { TrendingUp, BarChart3, Shield, ArrowRight, Zap, Sparkles, Brain, Eye, Video } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { ACCOUNT_PERFORMANCE_LINKS } from "@/lib/constants"
 
 interface PerformancePost {
   id: string
@@ -157,28 +158,8 @@ export default function Home() {
     }
   ]
 
-  const accountPerformanceLinks = [
-    {
-      label: "Primary Dashboard",
-      description: "Account management performance overview on SocialTradeTools",
-      href: "https://my.socialtradertools.com/view/LktDiabPtIzhEnNt",
-    },
-    {
-      label: "Live Performance #1",
-      description: "Verified live performance stream with key account metrics",
-      href: "https://my.socialtradertools.com/view/MyimZHO9sgMkMxiw",
-    },
-    {
-      label: "Live Performance #2",
-      description: "Diversified strategy performance feed updated in real time",
-      href: "https://my.socialtradertools.com/view/C3pe6Rbmad180C1Y",
-    },
-    {
-      label: "Live Performance #3",
-      description: "Extended account analytics and equity growth tracking",
-      href: "https://my.socialtradertools.com/view/BdkyYOHAqk9WJPFt",
-    },
-  ]
+  // Use shared constants for performance links
+  const accountPerformanceLinks = ACCOUNT_PERFORMANCE_LINKS
 
   const visiblePerformanceLinks = showAllPerformanceLinks
     ? accountPerformanceLinks
@@ -206,13 +187,13 @@ export default function Home() {
               <Sparkles className="w-5 h-5 text-yellow-400" />
               <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Next-Generation Technology</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 px-4">
               Powered by
               <span className="block gradient-text-gold animate-gradient" style={{ backgroundSize: "200% 200%" }}>
                 Advanced Signal Intelligence
               </span>
             </h2>
-            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto px-4">
               Experience the future of trading with cutting-edge quantitative research and real-time signal processing
             </p>
           </motion.div>
@@ -230,17 +211,17 @@ export default function Home() {
               >
                 <div className={`card-material flex h-full flex-col justify-between p-8 hover:border-yellow-400/50 transition-all duration-500 bg-gradient-to-br ${feature.bgColor} border ${feature.borderColor}`}>
                   <motion.div
-                    className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}
+                    className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${feature.iconBg} flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}
                     whileHover={{ rotate: 360 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <feature.icon className="w-8 h-8 text-white" />
+                    <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                   </motion.div>
                   
-                  <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-yellow-400 transition-colors">
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 group-hover:text-yellow-400 transition-colors">
                     {feature.title}
                   </h3>
-                  <p className="text-gray-300 leading-relaxed">
+                  <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -264,13 +245,13 @@ export default function Home() {
               <TrendingUp className="w-5 h-5 text-yellow-400" />
               <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Market Intelligence</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 px-4">
               Deep-Dive
               <span className="block gradient-text-gold animate-gradient" style={{ backgroundSize: "200% 200%" }}>
                 Analytics Posts
               </span>
             </h2>
-            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto px-4">
               Explore strategy breakdowns and signal-backed analysis from our professional traders.
             </p>
           </motion.div>
@@ -352,13 +333,13 @@ export default function Home() {
               <BarChart3 className="w-5 h-5 text-yellow-400" />
               <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Live Performance</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 px-4">
               Real-Time
               <span className="block gradient-text-gold animate-gradient" style={{ backgroundSize: "200% 200%" }}>
                 Trading Results
               </span>
             </h2>
-            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto px-4">
               Witness the power of signal-driven trading with live performance data and transparent analytics
             </p>
           </motion.div>
@@ -435,7 +416,7 @@ export default function Home() {
 
           {/* Modern CTA Section */}
           <motion.div 
-            className="text-center mt-16"
+            className="text-center mt-16 px-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -447,11 +428,11 @@ export default function Home() {
             >
               <Link 
                 href="/posts"
-                className="inline-flex items-center px-8 py-4 btn-material text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 btn-material text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <Eye className="w-5 h-5 mr-3" />
+                <Eye className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
                 Explore All Performance
-                <ArrowRight className="w-5 h-5 ml-3" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
               </Link>
             </motion.div>
           </motion.div>
@@ -472,13 +453,13 @@ export default function Home() {
               <Video className="w-5 h-5 text-yellow-500" />
               <span className="text-sm font-medium text-yellow-400 uppercase tracking-wider">Trading Education</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 px-4">
               Watch & Learn from
               <span className="block gradient-text-gold animate-gradient" style={{ backgroundSize: "200% 200%" }}>
                 Expert Analysis
               </span>
             </h2>
-            <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto px-4">
               Learn trading strategies, market insights, and performance breakdowns from professional trader videos
             </p>
           </motion.div>
@@ -490,7 +471,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.1 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-2xl font-semibold text-white mb-6">Education Videos</h3>
+              <h3 className="text-xl sm:text-2xl font-semibold text-white mb-6 px-4">Education Videos</h3>
               {videosLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                   {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -573,11 +554,11 @@ export default function Home() {
               >
                 <Link 
                   href="/videos"
-                  className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-xl text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-xl text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  <Video className="w-5 h-5 mr-3" />
+                  <Video className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
                   Watch All Videos
-                  <ArrowRight className="w-5 h-5 ml-3" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 sm:ml-3" />
                 </Link>
               </motion.div>
             </motion.div>

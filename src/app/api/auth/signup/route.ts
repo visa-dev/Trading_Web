@@ -13,10 +13,14 @@ const signUpSchema = z.object({
     .regex(/[A-Za-z]/, "Password must contain letters")
     .regex(/[0-9]/, "Password must contain numbers"),
   imageUrl: z
-    .string()
-    .url("Profile image URL is invalid")
+    .union([
+      z.string().url("Profile image URL is invalid"),
+      z.literal(""),
+      z.null(),
+      z.undefined(),
+    ])
     .optional()
-    .or(z.literal("").transform(() => undefined)),
+    .transform((val) => (val === "" || val === null || val === undefined ? undefined : val)),
 })
 
 export async function POST(request: Request) {

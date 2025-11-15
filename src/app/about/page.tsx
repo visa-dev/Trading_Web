@@ -17,15 +17,10 @@ import {
   ArrowRight,
 } from "lucide-react"
 import profileImage from "@/assets/profile.jpg"
-import { SiTelegram, SiFacebook, SiTiktok, SiInstagram, SiYoutube } from "react-icons/si"
+import { SOCIAL_LINKS, BRAND_NAME, BRAND_EMAIL, BRAND_PHONE_LINK, BRAND_PHONE_SHORT, BRAND_WEBSITE } from "@/lib/constants"
 
-const socialLinks = [
-  { label: "Telegram", href: "https://t.me/athenstrading", icon: SiTelegram },
-  { label: "Facebook", href: "https://www.facebook.com/hasakalanka", icon: SiFacebook },
-  { label: "TikTok", href: "https://www.tiktok.com/@saas.me", icon: SiTiktok },
-  { label: "Instagram", href: "https://www.instagram.com/sahan__akalanka", icon: SiInstagram },
-  { label: "YouTube", href: "https://youtube.com/@athensbysahan?si=Ol87ED9JQnU9xxoJ", icon: SiYoutube }
-]
+// Use shared constants
+const socialLinks = SOCIAL_LINKS
 
 const highlightStats = [
   { title: "10+ Years", subtitle: "Trading Experience" },
@@ -58,11 +53,11 @@ export default function AboutPage() {
               <div className="inline-flex items-center justify-center rounded-full border border-yellow-400/20 bg-yellow-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.4em] text-yellow-400 lg:justify-start">
                 About Me
               </div>
-              <h1 className="text-4xl font-bold leading-tight text-white sm:text-5xl">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight text-white">
                 Professional Trader &
                 <span className="block gradient-text-gold"> Strategic Mentor</span>
               </h1>
-              <p className="text-lg text-gray-300 md:text-xl">
+              <p className="text-base sm:text-lg md:text-xl text-gray-300">
                 I’m Sahan Akalanka, founder of Athens International Education Centre LTD. My mission is to
                 transform traders through disciplined execution, transparent performance, and premium education
                 grounded in signal-driven strategies.
@@ -127,8 +122,8 @@ export default function AboutPage() {
 
         <Card className="card-material border border-slate-800/60 bg-slate-900/60">
           <CardHeader className="space-y-3">
-            <CardTitle className="text-white text-2xl flex items-center gap-2">
-              <TrendingUp className="h-6 w-6 text-yellow-400" /> Who I Am
+            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+              <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> Who I Am
             </CardTitle>
             <CardDescription className="text-gray-300">
               A decade of Gold trading experience and a mission to elevate traders worldwide.
@@ -207,23 +202,23 @@ export default function AboutPage() {
 
         <Card className="card-material border border-slate-800/60 bg-slate-900/60">
           <CardHeader>
-            <CardTitle className="text-white text-2xl flex items-center gap-2">
-              <LineChart className="h-6 w-6 text-yellow-400" /> Connect With Me
+            <CardTitle className="text-xl sm:text-2xl text-white flex items-center gap-2 flex-wrap">
+              <LineChart className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-400" /> Connect With Me
             </CardTitle>
             <CardDescription className="text-gray-300">
               Founder: Athens International Education Centre LTD (UK)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-white">
-              <Link href="https://athenssl.com/" target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
-                <Globe className="h-4 w-4 text-yellow-400" /> athenssl.com
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm text-white">
+              <Link href={BRAND_WEBSITE} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2 justify-center sm:justify-start">
+                <Globe className="h-4 w-4 text-yellow-400 flex-shrink-0" /> <span className="truncate">athenssl.com</span>
               </Link>
-              <Link href="mailto:info@athenssl.com" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
-                <Mail className="h-4 w-4 text-yellow-400" /> info@athenssl.com
+              <Link href={`mailto:${BRAND_EMAIL}`} className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2 justify-center sm:justify-start">
+                <Mail className="h-4 w-4 text-yellow-400 flex-shrink-0" /> <span className="truncate">{BRAND_EMAIL}</span>
               </Link>
-              <Link href="tel:+94776387655" className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2">
-                <Phone className="h-4 w-4 text-yellow-400" /> 077 638 7655
+              <Link href={`tel:${BRAND_PHONE_LINK}`} className="rounded-lg border border-slate-800/60 bg-slate-900/40 px-4 py-3 hover:border-yellow-400/60 transition-colors flex items-center gap-2 justify-center sm:justify-start sm:col-span-2 md:col-span-1">
+                <Phone className="h-4 w-4 text-yellow-400 flex-shrink-0" /> <span className="truncate">{BRAND_PHONE_SHORT}</span>
               </Link>
             </div>
 
