@@ -325,6 +325,13 @@ export function DashboardClient({ session }: DashboardClientProps) {
                 <MessageSquare className="w-4 h-4" />
                 <span>Messages</span>
               </TabsTrigger>
+              <TabsTrigger
+                value="settings"
+                className="flex min-w-[140px] items-center justify-center space-x-2 whitespace-nowrap px-3 py-2 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:to-orange-500 data-[state=active]:text-navy-900"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Settings</span>
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-6">
@@ -369,6 +376,25 @@ export function DashboardClient({ session }: DashboardClientProps) {
                         </div>
                       </div>
                     )}
+                  </div>
+                </div>
+              </motion.div>
+            </TabsContent>
+
+            <TabsContent value="settings" className="mt-6">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6 }}
+              >
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <div className="text-center space-y-4">
+                    <Settings className="w-16 h-16 mx-auto text-yellow-400" />
+                    <h2 className="text-2xl font-bold text-white">Account Settings</h2>
+                    <p className="text-gray-400 mb-6">Manage your email and password</p>
+                    <Button asChild className="btn-material">
+                      <a href="/dashboard/settings">Go to Settings</a>
+                    </Button>
                   </div>
                 </div>
               </motion.div>
