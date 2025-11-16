@@ -125,18 +125,18 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
 
   return (
     <Card className="h-full flex flex-col card-material">
-      <CardHeader className="border-b border-gray-700/50">
+      <CardHeader className="border-b border-gray-700/50 flex-shrink-0">
         <CardTitle className="flex items-center space-x-2 text-white">
           <MessageSquare className="w-5 h-5" />
           <span>Chat</span>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col p-0">
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
+      <CardContent className="flex-1 flex flex-col p-0 min-h-0 overflow-hidden">
+        {/* Messages Area - KEY CHANGES HERE */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
+            <div className="flex items-center justify-center h-full min-h-[300px]">
               <div className="text-center text-gray-300">
                 <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p>No messages yet</p>
@@ -144,139 +144,141 @@ export function ChatInterface({ conversationId }: ChatInterfaceProps) {
               </div>
             </div>
           ) : (
-            messages.map((message) => {
-              const isOwnMessage = message.sender.role === "TRADER"
-              
-              const renderMessageContent = (content: string) => {
-                const lines = content.split("\n")
+            <>
+              {messages.map((message) => {
+                const isOwnMessage = message.sender.role === "TRADER"
+                
+                const renderMessageContent = (content: string) => {
+                  const lines = content.split("\n")
 
-                const LINK_SPLIT_REGEX =
-                  /(https?:\/\/[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\+?\d[\d\s\-]{7,}\d))/g
-                const urlRegex = /^https?:\/\/[^\s]+$/i
-                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i
-                const phoneRegex = /^\+?\d[\d\s\-]{7,}\d$/
+                  const LINK_SPLIT_REGEX =
+                    /(https?:\/\/[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\+?\d[\d\s\-]{7,}\d))/g
+                  const urlRegex = /^https?:\/\/[^\s]+$/i
+                  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i
+                  const phoneRegex = /^\+?\d[\d\s\-]{7,}\d$/
 
-                const renderTokens = (text: string) => {
-                  const tokens = text.split(LINK_SPLIT_REGEX).filter((token) => token !== undefined && token !== "")
+                  const renderTokens = (text: string) => {
+                    const tokens = text.split(LINK_SPLIT_REGEX).filter((token) => token !== undefined && token !== "")
 
-                  return tokens.map((token, idx) => {
-                    if (urlRegex.test(token)) {
-                      return (
-                        <a
-                          key={`url-${token}-${idx}`}
-                          href={token}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
-                        >
-                          {token}
-                        </a>
-                      )
+                    return tokens.map((token, idx) => {
+                      if (urlRegex.test(token)) {
+                        return (
+                          <a
+                            key={`url-${token}-${idx}`}
+                            href={token}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
+                          >
+                            {token}
+                          </a>
+                        )
+                      }
+
+                      if (emailRegex.test(token)) {
+                        return (
+                          <a
+                            key={`email-${token}-${idx}`}
+                            href={`mailto:${token}`}
+                            className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
+                          >
+                            {token}
+                          </a>
+                        )
+                      }
+
+                      if (phoneRegex.test(token)) {
+                        const telValue = token.replace(/[^\d+]/g, "")
+                        return (
+                          <a
+                            key={`phone-${token}-${idx}`}
+                            href={`tel:${telValue}`}
+                            className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
+                          >
+                            {token}
+                          </a>
+                        )
+                      }
+
+                      return <Fragment key={`token-${token}-${idx}`}>{token}</Fragment>
+                    })
+                  }
+                  
+
+                  return lines.map((line, index) => {
+                    const trimmed = line.trim()
+
+                    if (trimmed.length === 0) {
+                      return <div key={`line-${index}`} className="h-2" aria-hidden="true" />
                     }
 
-                    if (emailRegex.test(token)) {
-                      return (
-                        <a
-                          key={`email-${token}-${idx}`}
-                          href={`mailto:${token}`}
-                          className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
-                        >
-                          {token}
-                        </a>
-                      )
-                    }
+                    const isBullet = trimmed.startsWith("•")
+                    const lineContent = isBullet ? trimmed.slice(1).trim() : line.trim()
 
-                    if (phoneRegex.test(token)) {
-                      const telValue = token.replace(/[^\d+]/g, "")
-                      return (
-                        <a
-                          key={`phone-${token}-${idx}`}
-                          href={`tel:${telValue}`}
-                          className="text-yellow-200 underline underline-offset-4 hover:text-yellow-100 transition-colors"
-                        >
-                          {token}
-                        </a>
-                      )
-                    }
-
-                    return <Fragment key={`token-${token}-${idx}`}>{token}</Fragment>
+                    return (
+                      <div
+                        key={`line-${index}`}
+                        className={`text-sm leading-5 ${isBullet ? "flex items-start gap-2 text-left" : "text-left"}`}
+                      >
+                        {isBullet ? <span className="mt-1 text-yellow-300">•</span> : null}
+                        <span className="whitespace-pre-wrap break-words">{renderTokens(lineContent)}</span>
+                      </div>
+                    )
                   })
                 }
-                
 
-                return lines.map((line, index) => {
-                  const trimmed = line.trim()
-
-                  if (trimmed.length === 0) {
-                    return <div key={`line-${index}`} className="h-2" aria-hidden="true" />
-                  }
-
-                  const isBullet = trimmed.startsWith("•")
-                  const lineContent = isBullet ? trimmed.slice(1).trim() : line.trim()
-
-                  return (
-                    <div
-                      key={`line-${index}`}
-                      className={`text-sm leading-5 ${isBullet ? "flex items-start gap-2 text-left" : "text-left"}`}
-                    >
-                      {isBullet ? <span className="mt-1 text-yellow-300">•</span> : null}
-                      <span className="whitespace-pre-wrap break-words">{renderTokens(lineContent)}</span>
-                    </div>
-                  )
-                })
-              }
-
-              return (
-                <div
-                  key={message.id}
-                  className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex items-start space-x-3 max-w-xs lg:max-w-md ${
-                    isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''
-                  }`}>
-                    <Avatar className="w-8 h-8 flex-shrink-0">
-                      <AvatarImage src={message.sender.image || ""} />
-                      <AvatarFallback>
-                        {message.sender.username.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div className={`flex flex-col ${
-                      isOwnMessage ? 'items-end' : 'items-start'
+                return (
+                  <div
+                    key={message.id}
+                    className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`flex items-start space-x-3 max-w-xs lg:max-w-md ${
+                      isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''
                     }`}>
-                      <div
-                        className={`px-4 py-2 rounded-lg ${
-                          isOwnMessage
-                            ? 'bg-yellow-500 text-black'
-                            : 'bg-gray-800 text-white border border-gray-700'
-                        }`}
-                      >
-                        <div className="space-y-1">{renderMessageContent(message.content)}</div>
-                      </div>
+                      <Avatar className="w-8 h-8 flex-shrink-0">
+                        <AvatarImage src={message.sender.image || ""} />
+                        <AvatarFallback>
+                          {message.sender.username.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                       
-                      <div className={`flex items-center space-x-1 mt-1 ${
-                        isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''
+                      <div className={`flex flex-col ${
+                        isOwnMessage ? 'items-end' : 'items-start'
                       }`}>
-                        <span className="text-xs text-gray-400">
-                          {formatMessageTime(message.createdAt)}
-                        </span>
-                        {isOwnMessage && (
+                        <div
+                          className={`px-4 py-2 rounded-lg ${
+                            isOwnMessage
+                              ? 'bg-yellow-500 text-black'
+                              : 'bg-gray-800 text-white border border-gray-700'
+                          }`}
+                        >
+                          <div className="space-y-1">{renderMessageContent(message.content)}</div>
+                        </div>
+                        
+                        <div className={`flex items-center space-x-1 mt-1 ${
+                          isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''
+                        }`}>
                           <span className="text-xs text-gray-400">
-                            {message.read ? '✓✓' : '✓'}
+                            {formatMessageTime(message.createdAt)}
                           </span>
-                        )}
+                          {isOwnMessage && (
+                            <span className="text-xs text-gray-400">
+                              {message.read ? '✓✓' : '✓'}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )
-            })
+                )
+              })}
+              <div ref={messagesEndRef} />
+            </>
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input */}
-        <div className="border-t border-gray-700/50 p-4 bg-gray-900/50">
+        <div className="border-t border-gray-700/50 p-4 bg-gray-900/50 flex-shrink-0">
           <form onSubmit={sendMessage} className="flex space-x-2">
             <Textarea
               value={newMessage}

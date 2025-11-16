@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
-import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Copy, Shield } from "lucide-react"
+import { User, LogOut, CheckCircle, Zap, BarChart3, TrendingUp, Menu, X, GraduationCap, Copy, Shield, Settings } from "lucide-react"
 import Link from "next/link"
 import { BRAND_NAME } from "@/lib/constants"
 
@@ -210,12 +210,20 @@ export function Navigation() {
                     )}
                     
                     {sessionRole === "TRADER" && (
-                      <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
-                        <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-2">
-                          <BarChart3 className="w-4 h-4 text-yellow-400" />
-                          <span className="text-white">Trader Dashboard</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      <>
+                        <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
+                          <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-2">
+                            <BarChart3 className="w-4 h-4 text-yellow-400" />
+                            <span className="text-white">Trader Dashboard</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="hover:bg-gray-800/50 transition-colors duration-300">
+                          <Link href="/dashboard/settings" className="flex items-center space-x-3 px-4 py-2">
+                            <Settings className="w-4 h-4 text-yellow-400" />
+                            <span className="text-white">Settings</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
                     )}
                   </div>
                   
