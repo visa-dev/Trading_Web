@@ -13,10 +13,11 @@ import { VideoCard } from "@/components/video-card"
 import { VideoModal } from "@/components/video-modal"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import { motion } from "framer-motion"
-import { TrendingUp, BarChart3, Shield, ArrowRight, Zap, Sparkles, Brain, Eye, Video } from "lucide-react"
+import { TrendingUp, BarChart3, Shield, ArrowRight, Zap, Sparkles, Brain, Eye, Video, ChevronDown, ChevronUp } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ACCOUNT_PERFORMANCE_LINKS } from "@/lib/constants"
+import { AdvancedIndicators } from "@/components/AdvancedIndicators"
 
 interface PerformancePost {
   id: string
@@ -55,6 +56,9 @@ export default function Home() {
   const [selectedVideo, setSelectedVideo] = useState<TradingVideo | null>(null)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const [showAllPerformanceLinks, setShowAllPerformanceLinks] = useState(false)
+  const [showAllAnalytics, setShowAllAnalytics] = useState(false)
+  const [showAllPerformance, setShowAllPerformance] = useState(false)
+  const [showAllVideos, setShowAllVideos] = useState(false)
   const userRole = (session?.user as { role?: string } | undefined)?.role ?? null
 
   const fetchPosts = async () => {
@@ -63,8 +67,8 @@ export default function Home() {
       if (response.ok) {
         const data = await response.json()
         const postsArray: PerformancePost[] = Array.isArray(data) ? data : (data.posts || [])
-        const performance = postsArray.filter((post) => post.type === "PERFORMANCE").slice(0, 6)
-        const analytics = postsArray.filter((post) => post.type === "ANALYTICS").slice(0, 6)
+        const performance = postsArray.filter((post) => post.type === "PERFORMANCE")
+        const analytics = postsArray.filter((post) => post.type === "ANALYTICS")
         setPerformancePosts(performance)
         setAnalyticsPosts(analytics)
       }
@@ -90,7 +94,7 @@ export default function Home() {
       const response = await fetch('/api/videos')
       if (response.ok) {
         const data = await response.json()
-        setVideos(data.videos.slice(0, 6)) // Show only first 6 videos
+        setVideos(data.videos)
       }
     } catch (error) {
       console.error('Error fetching videos:', error)
@@ -104,13 +108,11 @@ export default function Home() {
       router.push('/dashboard')
       return
     }
-    
-    // Fetch posts and videos for all non-traders (including non-authenticated users)
+
     fetchPosts()
     fetchVideos()
   }, [userRole, router])
 
-  // Show loading while checking session or redirecting traders
   if (status === "loading" || userRole === "TRADER") {
     return (
       <div className="min-h-screen hero-bg flex items-center justify-center">
@@ -158,25 +160,34 @@ export default function Home() {
     }
   ]
 
-  // Use shared constants for performance links
   const accountPerformanceLinks = ACCOUNT_PERFORMANCE_LINKS
 
   const visiblePerformanceLinks = showAllPerformanceLinks
     ? accountPerformanceLinks
     : accountPerformanceLinks.slice(0, 2)
 
+  const visibleAnalyticsPosts = showAllAnalytics
+    ? analyticsPosts
+    : analyticsPosts.slice(0, 6)
+
+  const visiblePerformancePosts = showAllPerformance
+    ? performancePosts
+    : performancePosts.slice(0, 6)
+
+  const visibleVideos = showAllVideos
+    ? videos
+    : videos.slice(0, 6)
+
   return (
     <div className="min-h-screen">
       <Hero />
       <SocialTradingOverview />
-      
-      {/* MyFXBook Iframe Section */}
       <MyFXBookIframe />
-      
+
       {/* Modern Features Section */}
       <section className="section-spacing bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700">
         <div className="max-w-7xl mx-auto container-responsive">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -217,7 +228,7 @@ export default function Home() {
                   >
                     <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
                   </motion.div>
-                  
+
                   <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 group-hover:text-yellow-400 transition-colors">
                     {feature.title}
                   </h3>
@@ -280,25 +291,56 @@ export default function Home() {
               ))}
             </div>
           ) : analyticsPosts.length > 0 ? (
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              {analyticsPosts.map((post, index) => (
+            <>
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                {visibleAnalyticsPosts.map((post, index) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <PerformanceCard post={post} />
+                  </motion.div>
+                ))}
+              </motion.div>
+              {analyticsPosts.length > 6 && (
                 <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 30 }}
+                  className="text-center mt-12"
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  transition={{ duration: 0.8 }}
                   viewport={{ once: true }}
                 >
-                  <PerformanceCard post={post} />
+                  <motion.button
+                    onClick={() => setShowAllAnalytics(!showAllAnalytics)}
+                    className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-xl text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {showAllAnalytics ? (
+                      <>
+                        <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                        Show Less Analytics
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                        Show More Analytics ({analyticsPosts.length - 6} more)
+                      </>
+                    )}
+                  </motion.button>
                 </motion.div>
-              ))}
-            </motion.div>
+              )}
+
+            </>
           ) : (
             <motion.div
               className="text-center py-16"
@@ -322,7 +364,7 @@ export default function Home() {
       {/* Live Performance Section */}
       <section className="section-spacing performance-bg">
         <div className="max-w-7xl mx-auto container-responsive">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -343,8 +385,6 @@ export default function Home() {
               Witness the power of signal-driven trading with live performance data and transparent analytics
             </p>
           </motion.div>
-
-         
 
           {postsLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -370,27 +410,58 @@ export default function Home() {
               ))}
             </div>
           ) : performancePosts.length > 0 ? (
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              {performancePosts.map((post, index) => (
+            <>
+              <motion.div
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                {visiblePerformancePosts.map((post, index) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                  >
+                    <PerformanceCard post={post} />
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {performancePosts.length > 6 && (
                 <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 30 }}
+                  className="text-center mt-12"
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  transition={{ duration: 0.8 }}
                   viewport={{ once: true }}
                 >
-                  <PerformanceCard post={post} />
+                  <motion.button
+                    onClick={() => setShowAllPerformance(!showAllPerformance)}
+                    className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-xl text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {showAllPerformance ? (
+                      <>
+                        <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                        Show Less Performance
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                        Show More Performance ({performancePosts.length - 6} more)
+                      </>
+                    )}
+                  </motion.button>
                 </motion.div>
-              ))}
-            </motion.div>
+              )}
+            </>
           ) : (
-            <motion.div 
+            <motion.div
               className="text-center py-16"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -403,7 +474,7 @@ export default function Home() {
                 <p className="text-gray-300 mb-6">
                   Trading results will be published here once new performance posts go live. Check back soon for verified updates.
                 </p>
-                <Link 
+                <Link
                   href="/copy-trading"
                   className="inline-flex items-center px-6 py-3 btn-material"
                 >
@@ -414,8 +485,7 @@ export default function Home() {
             </motion.div>
           )}
 
-          {/* Modern CTA Section */}
-          <motion.div 
+          <motion.div
             className="text-center mt-16 px-4"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -426,7 +496,7 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Link 
+              <Link
                 href="/posts"
                 className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 btn-material text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
               >
@@ -442,7 +512,7 @@ export default function Home() {
       {/* Trading Videos Section */}
       <section className="section-spacing bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700">
         <div className="max-w-7xl mx-auto container-responsive">
-          <motion.div 
+          <motion.div
             className="text-center mb-16"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -493,27 +563,58 @@ export default function Home() {
                   ))}
                 </div>
               ) : videos.length > 0 ? (
-                <motion.div 
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ duration: 0.8 }}
-                  viewport={{ once: true }}
-                >
-                  {videos.map((video, index) => (
+                <>
+                  <motion.div
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    transition={{ duration: 0.8 }}
+                    viewport={{ once: true }}
+                  >
+                    {visibleVideos.map((video, index) => (
+                      <motion.div
+                        key={video.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                        viewport={{ once: true }}
+                      >
+                        <VideoCard video={video} onWatch={handleWatchVideo} />
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {videos.length > 6 && (
                     <motion.div
-                      key={video.id}
-                      initial={{ opacity: 0, y: 30 }}
+                      className="text-center mt-12"
+                      initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      transition={{ duration: 0.8 }}
                       viewport={{ once: true }}
                     >
-                      <VideoCard video={video} onWatch={handleWatchVideo} />
+                      <motion.button
+                        onClick={() => setShowAllVideos(!showAllVideos)}
+                        className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-xl text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {showAllVideos ? (
+                          <>
+                            <ChevronUp className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                            Show Less Videos
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
+                            Show More Videos ({videos.length - 6} more)
+                          </>
+                        )}
+                      </motion.button>
                     </motion.div>
-                  ))}
-                </motion.div>
+                  )}
+                </>
               ) : (
-                <motion.div 
+                <motion.div
                   className="text-center py-16"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -526,7 +627,7 @@ export default function Home() {
                     <p className="text-gray-300 mb-6">
                       Trading performance videos are being uploaded. Check back soon for educational content.
                     </p>
-                    <Link 
+                    <Link
                       href="/auth/signin"
                       className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 transition-all"
                     >
@@ -539,9 +640,8 @@ export default function Home() {
             </motion.div>
           </div>
 
-          {/* CTA Section */}
           {videos.length > 0 && (
-            <motion.div 
+            <motion.div
               className="text-center mt-16"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -552,7 +652,7 @@ export default function Home() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Link 
+                <Link
                   href="/videos"
                   className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white rounded-xl text-base sm:text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                 >
@@ -572,8 +672,9 @@ export default function Home() {
         onClose={handleCloseVideoModal}
       />
 
-      {/* Reviews Carousel Section */}
       <ReviewsCarousel />
+
+      <AdvancedIndicators />
 
       <Footer />
     </div>

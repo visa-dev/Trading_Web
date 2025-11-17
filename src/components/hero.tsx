@@ -125,7 +125,7 @@ export function Hero() {
     "Instagram": "from-rose-500/20 to-amber-500/20",
     "YouTube": "from-red-500/20 to-orange-500/20",
   }
-  
+
   const socialLinks = SOCIAL_LINKS.map(social => ({
     href: social.href,
     label: social.label,
@@ -134,7 +134,7 @@ export function Hero() {
   }))
 
   return (
-    <motion.div 
+    <motion.div
       className="relative min-h-screen hero-bg overflow-hidden"
       variants={pageVariants}
       initial="initial"
@@ -173,9 +173,9 @@ export function Hero() {
             ease: "easeInOut",
           }}
         />
-        
+
         {/* Grid pattern overlay */}
-        <div 
+        <div
           className="absolute inset-0 opacity-10"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f59e0b' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -186,7 +186,7 @@ export function Hero() {
       <div className="relative max-w-7xl mx-auto container-responsive section-spacing pb-24 lg:pb-32">
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[70vh]">
-          
+
           {/* Left Column - Photo and Personal Information */}
           <motion.div
             className="space-y-8"
@@ -211,7 +211,7 @@ export function Hero() {
                     className="w-full h-full object-cover"
                   />
                 </motion.div>
-                
+
                 {/* Floating badges around photo */}
                 <motion.div
                   className="absolute -top-4 -right-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg"
@@ -221,7 +221,7 @@ export function Hero() {
                   <CheckCircle className="w-4 h-4 inline mr-1" />
                   Verified Trader
                 </motion.div>
-                
+
                 <motion.div
                   className="absolute -bottom-4 -left-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg"
                   animate={{ y: [0, -10, 0] }}
@@ -294,64 +294,72 @@ export function Hero() {
                   Live Performance
                 </span>
               </div>
-              
+
               <h1 className="text-4xl sm:text-5xl font-bold text-white dark:text-white light:text-navy-900 mb-4">
                 Trading
                 <span className="block gradient-text-gold mt-2 animate-gradient" style={{ backgroundSize: "200% 200%" }}>
                   Excellence
                 </span>
               </h1>
-              
+
               <p className="text-xl text-gray-300 dark:text-gray-300 light:text-navy-700 max-w-lg mx-auto lg:mx-0">
                 Real-time performance metrics from advanced signal-driven trading algorithms
               </p>
             </motion.div>
 
             {/* Performance Stats Grid */}
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 sm:grid-cols-2 gap-6"
               variants={containerVariants}
             >
-              {achievements.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  variants={itemVariants}
-                  className="group"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                >
-                  <div className="card-material p-6 text-center hover:border-yellow-400/50 transition-all duration-300">
-                    <motion.div
-                      className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r ${
-                        stat.label === "Win Rate"
-                          ? "from-green-500/20 to-emerald-500/20"
-                          : stat.label === "Total Posts"
-                          ? "from-blue-500/20 to-cyan-500/20"
-                          : stat.label === "Max Drawdown"
-                          ? "from-yellow-500/20 to-orange-500/20"
-                          : "from-purple-500/20 to-pink-500/20"
-                      } flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}
-                      variants={scaleBounceVariants}
-                      initial="hidden"
-                      animate="visible"
-                      transition={{ delay: 0.6 + index * 0.1 }}
-                    >
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </motion.div>
-                    
-                    <div className={`text-2xl font-bold mb-2 ${stat.color}`}>
-                      {stat.value}
+              {achievements.map((stat, index) => {
+                // Hardcoded values
+                let value = stat.value;
+                if (stat.label === "Win Rate") value = "85%";
+                if (stat.label === "Max Drawdown") value = "35%";
+                if (stat.label === "Risk/Reward") value = "1.2";
+
+                return (
+                  <motion.div
+                    key={stat.label}
+                    variants={itemVariants}
+                    className="group"
+                    whileHover={{ y: -5, scale: 1.02 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    <div className="card-material p-6 text-center hover:border-yellow-400/50 transition-all duration-300">
+                      <motion.div
+                        className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-r ${stat.label === "Win Rate"
+                            ? "from-green-500/20 to-emerald-500/20"
+                            : stat.label === "Total Posts"
+                              ? "from-blue-500/20 to-cyan-500/20"
+                              : stat.label === "Max Drawdown"
+                                ? "from-yellow-500/20 to-orange-500/20"
+                                : "from-purple-500/20 to-pink-500/20"
+                          } flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300`}
+                        variants={scaleBounceVariants}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ delay: 0.6 + index * 0.1 }}
+                      >
+                        <stat.icon className="w-6 h-6 text-white" />
+                      </motion.div>
+
+                      <div className={`text-2xl font-bold mb-2 ${stat.color}`}>
+                        {value}
+                      </div>
+                      <div className="text-sm text-gray-400 dark:text-gray-400 light:text-navy-600 font-medium">
+                        {stat.label}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-400 dark:text-gray-400 light:text-navy-600 font-medium">
-                      {stat.label}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </motion.div>
 
+
             {/* CTA Buttons */}
-            <motion.div 
+            <motion.div
               className="flex flex-col sm:flex-row gap-4"
               variants={containerVariants}
               initial="hidden"
@@ -370,26 +378,26 @@ export function Hero() {
                   </Link>
                 </Button>
               </motion.div>
-              
+
               <motion.div
-              variants={itemVariants}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Button asChild size="lg" variant="outline" className="btn-material-outline text-lg px-8 py-4">
-                <Link href="/copy-trading" className="flex items-center">
-                  <Zap className="w-5 h-5 mr-2" />
-                  Copy Trading
-                </Link>
-              </Button>
-            </motion.div>
+                variants={itemVariants}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button asChild size="lg" variant="outline" className="btn-material-outline text-lg px-8 py-4">
+                  <Link href="/copy-trading" className="flex items-center">
+                    <Zap className="w-5 h-5 mr-2" />
+                    Copy Trading
+                  </Link>
+                </Button>
+              </motion.div>
             </motion.div>
           </motion.div>
         </div>
       </div>
 
       {/* Scroll indicator */}
-      <motion.div 
+      <motion.div
         className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
         variants={floatVariants}
         initial={{ opacity: 0, y: 20 }}

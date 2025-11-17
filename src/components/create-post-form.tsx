@@ -22,8 +22,10 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
     drawdown: "",
     riskReward: "",
     videoUrl: "",
-    published: false
+    published: false,
+    tradingViewLink: ""
   }
+
   const [formData, setFormData] = useState(initialFormState)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
@@ -85,6 +87,7 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
           imageUrl: uploadedImageUrl,
           videoUrl: formData.videoUrl.trim() || null,
           published: formData.published,
+          tradingViewLink: formData.tradingViewLink.trim() || null 
         }),
       })
 
@@ -275,6 +278,20 @@ export function CreatePostForm({ onSuccess }: CreatePostFormProps) {
           placeholder="https://www.youtube.com/watch?v=..."
         />
       </div>
+
+      {formData.type === "ANALYTICS" && (
+        <div className="space-y-2">
+          <Label htmlFor="tradingViewLink">TradingView Link</Label>
+          <Input
+            id="tradingViewLink"
+            type="url"
+            value={formData.tradingViewLink}
+            onChange={(e) => handleInputChange('tradingViewLink', e.target.value)}
+            placeholder="https://www.tradingview.com/chart/..."
+          />
+        </div>
+      )}
+
 
       <div className="flex items-center space-x-2">
         <input
