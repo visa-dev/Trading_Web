@@ -20,6 +20,7 @@ interface PerformancePost {
   riskReward?: number | null
   imageUrl?: string | null
   videoUrl?: string | null
+  tradingViewLink?: string | null
   createdAt: Date
 }
 
@@ -36,7 +37,7 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo({ top: 0, behavior: 'instant' })
-    
+
     // Simulate loading for better UX
     const timer = setTimeout(() => {
       setIsLoading(false)
@@ -142,7 +143,7 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
   const winRateDisplay = formatPercentage(winRateValue)
   const drawdownDisplay = formatPercentage(drawdownValue)
   const riskRewardDisplay = typeof riskRewardValue === "number" ? riskRewardValue.toFixed(2) : "N/A"
-  const descriptionText = formatDescription(post?.description?.trim()||"");
+  const descriptionText = formatDescription(post?.description?.trim() || "");
 
   const profitBadgeClasses = isPerformance
     ? (hasProfitLoss
@@ -456,6 +457,30 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
                     )}
                   </motion.div>
                 )}
+                {post.tradingViewLink && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }}
+                    whileHover={{ scale: 1.03, y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.25)" }}
+                    className="cursor-pointer"
+                    onClick={() => window.open(post.tradingViewLink || "", "_blank")}
+                  >
+                    <Card className="card-material bg-gradient-to-br from-yellow-900/10 to-yellow-600/10 border-yellow-700/30 transition-all duration-300 hover:bg-gradient-to-br hover:from-yellow-900/20 hover:to-yellow-600/20">
+                      <CardHeader className="pb-2 flex items-center space-x-2">
+                        <BarChart3 className="w-5 h-5 text-yellow-500" />
+                        <CardTitle className="text-sm font-medium text-white">View on TradingView</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <button className="w-full py-2 px-4 bg-yellow-700 hover:bg-yellow-800 text-white font-medium rounded-lg transition-colors duration-300">
+                          Open Trading View
+                        </button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
+
+
               </motion.div>
             </CardContent>
           </Card>

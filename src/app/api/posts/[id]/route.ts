@@ -90,6 +90,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       riskReward,
       imageUrl,
       videoUrl,
+      tradingViewLink,
       published,
       type: rawType,
     } = body ?? {}
@@ -125,6 +126,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     if (published !== undefined) {
       updateData.published = Boolean(published)
+    }
+
+    if( tradingViewLink !== undefined) {
+      updateData.tradingViewLink = normalizeOptionalString(tradingViewLink)
     }
 
     let normalizedType: "PERFORMANCE" | "ANALYTICS" | undefined
