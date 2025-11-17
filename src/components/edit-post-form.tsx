@@ -38,6 +38,7 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
     riskReward: p.riskReward != null ? p.riskReward.toString() : "",
     imageUrl: p.imageUrl ?? "",
     videoUrl: p.videoUrl ?? "",
+    tradingViewLink: "",
     published: p.published,
   })
 
@@ -50,13 +51,13 @@ export function EditPostForm({ post, onSuccess }: EditPostFormProps) {
     setFormData(createInitialState(post))
   }, [post])
 
-useEffect(() => {
-  return () => {
-    if (imagePreview && imagePreview.startsWith("blob:")) {
-      URL.revokeObjectURL(imagePreview)
+  useEffect(() => {
+    return () => {
+      if (imagePreview && imagePreview.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview)
+      }
     }
-  }
-}, [imagePreview])
+  }, [imagePreview])
 
   const parseNumber = (value: string): number | null => {
     const trimmed = value.trim()
@@ -108,6 +109,7 @@ useEffect(() => {
           riskReward: isPerformancePost ? parseNumber(formData.riskReward) : null,
           imageUrl: imageUrlToUse,
           videoUrl: formData.videoUrl.trim() || null,
+          tradingViewLink: formData.tradingViewLink.trim() || null,
           published: formData.published,
         }),
       })
@@ -306,6 +308,20 @@ useEffect(() => {
           placeholder="https://www.youtube.com/watch?v=..."
         />
       </div>
+      {formData.type === "ANALYTICS" && (
+        <div className="space-y-2">
+          <Label htmlFor="tradingViewLink">TradingView Link (optional)</Label>
+          <Input
+            id="tradingViewLink"
+            type="url"
+            value={formData.tradingViewLink}
+            onChange={(e) => handleInputChange('tradingViewLink', e.target.value)}
+            placeholder="https://www.tradingview.com/..."
+          />
+        </div>
+      )}
+
+
 
       <div className="flex items-center space-x-2">
         <input

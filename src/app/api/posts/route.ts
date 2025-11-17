@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       riskReward,
       imageUrl,
       videoUrl,
+      tradingViewLink,
       published = false,
       type: rawType = "PERFORMANCE",
     } = body ?? {}
@@ -151,6 +152,7 @@ export async function POST(request: NextRequest) {
         drawdown: normalizedType === "PERFORMANCE" ? normalizedDrawdown : null,
         riskReward: normalizedType === "PERFORMANCE" ? normalizedRiskReward : null,
         imageUrl: normalizeOptionalString(imageUrl),
+        tradingViewLink: normalizeOptionalString(tradingViewLink),
         videoUrl: normalizeOptionalString(videoUrl),
         published: Boolean(published),
       }

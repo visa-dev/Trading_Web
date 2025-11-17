@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react"
 import { PerformanceCard } from "@/components/performance-card"
 import { motion } from "framer-motion"
-import { TrendingUp, BarChart3, Filter, Search, Calendar, ArrowLeft, Eye, Star } from "lucide-react"
+import { TrendingUp, BarChart3, Filter, Search, Calendar, ArrowLeft, Eye } from "lucide-react"
 import { LoadingSpinner } from "@/components/loading-spinner"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { ACCOUNT_PERFORMANCE_LINKS } from "@/lib/constants"
 
 interface PerformancePost {
   id: string
@@ -24,10 +24,10 @@ interface PerformancePost {
   videoUrl?: string | null
   published: boolean
   createdAt: string
-  reviews: Array<{
-    rating: number
-  }>
+  reviews: Array<{ rating: number }>
 }
+
+const performanceLinks = ACCOUNT_PERFORMANCE_LINKS;
 
 export default function PostsPage() {
   const [posts, setPosts] = useState<PerformancePost[]>([])
@@ -56,7 +56,6 @@ export default function PostsPage() {
   }
 
   const searchLower = searchTerm.toLowerCase()
-
   const filteredPosts = posts.filter(post => {
     const descriptionText = (post.description || "").toLowerCase()
     const matchesSearch =
@@ -64,11 +63,11 @@ export default function PostsPage() {
       descriptionText.includes(searchLower)
 
     if (filterPeriod === "all") return matchesSearch
-    
+
     const postDate = new Date(post.createdAt)
     const now = new Date()
     const daysDiff = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60 * 60 * 24))
-    
+
     switch (filterPeriod) {
       case "week":
         return matchesSearch && daysDiff <= 7
@@ -81,39 +80,10 @@ export default function PostsPage() {
     }
   })
 
-  const getPerformanceStats = () => {
-    const performanceOnly = posts
-
-    if (performanceOnly.length === 0) {
-      return { totalTrades: 0, avgWinRate: 0, totalProfit: 0 }
-    }
-
-    const totalTrades = performanceOnly.length
-
-    const winRateValues = performanceOnly
-      .map((post) => (typeof post.winRate === "number" && Number.isFinite(post.winRate) ? post.winRate : null))
-      .filter((value): value is number => value !== null)
-
-    const avgWinRate = winRateValues.length
-      ? winRateValues.reduce((sum, value) => sum + value, 0) / winRateValues.length
-      : 0
-
-    const totalProfit = performanceOnly.reduce((sum, post) => {
-      const value = typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
-        ? post.profitLoss
-        : 0
-      return sum + value
-    }, 0)
-
-    return { totalTrades, avgWinRate, totalProfit }
-  }
-
-  const stats = getPerformanceStats()
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 py-12">
       <div className="max-w-7xl mx-auto container-responsive">
-        
+
         {/* Header Section */}
         <motion.div
           className="mb-12"
@@ -138,70 +108,37 @@ export default function PostsPage() {
             </div>
           </div>
 
-          {/* Performance Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <Card className="card-material bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-blue-400 text-sm font-medium">Total Trades</p>
-                      <p className="text-2xl font-bold text-white">{stats.totalTrades}</p>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                      <BarChart3 className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+          {/* Account Management Performance Card */}
+          <Card className="card-material border border-slate-800/60 bg-slate-900/60 mb-8">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl sm:text-2xl text-white px-2 sm:px-0">
+                Account Management Performance
+              </CardTitle>
+          
+            </CardHeader>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <Card className="card-material bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-green-400 text-sm font-medium">Avg Win Rate</p>
-                      <p className="text-2xl font-bold text-white">{stats.avgWinRate.toFixed(1)}%</p>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-2 sm:px-4">
+              {performanceLinks.map((link, index) => (
+                <motion.a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  whileHover={{ scale: 1.03, boxShadow: "0 8px 20px rgba(0,0,0,0.5)" }}
+                  whileTap={{ scale: 0.97 }}
+                  className="block rounded-xl border border-slate-800/60 bg-slate-900/40 p-4 min-h-[100px] flex items-center transition-colors hover:bg-slate-900/60 cursor-pointer"
+                >
+                  <p className="text-xs sm:text-sm font-semibold text-yellow-400 uppercase tracking-wide">
+                    {link.label}
+                  </p>
+                </motion.a>
+              ))}
+            </CardContent>
+          </Card>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <Card className="card-material bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/20">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-yellow-400 text-sm font-medium">Total Profit</p>
-                      <p className="text-2xl font-bold text-white">
-                        ${stats.totalProfit.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-xl flex items-center justify-center">
-                      <Star className="w-6 h-6 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
 
           {/* Search and Filter Section */}
           <motion.div
@@ -219,7 +156,7 @@ export default function PostsPage() {
                 className="pl-10 bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-yellow-400"
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Filter className="w-4 h-4 text-gray-400" />
               <select
@@ -247,22 +184,20 @@ export default function PostsPage() {
             <LoadingSpinner message="Loading trading performance data..." size="lg" />
           </motion.div>
         ) : filteredPosts.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredPosts.map((post, index) => (
-                <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <PerformanceCard post={post} />
-                </motion.div>
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredPosts.map((post, index) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <PerformanceCard post={post} />
+              </motion.div>
+            ))}
+          </div>
         ) : (
-          <motion.div 
+          <motion.div
             className="text-center py-16"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -272,8 +207,8 @@ export default function PostsPage() {
               <CardContent className="p-12 text-center">
                 <Eye className="w-16 h-16 mx-auto mb-6 text-gray-400" />
                 <h3 className="text-xl font-bold text-white mb-4">No Posts Found</h3>
-                <p className="text-gray-300 mb-6">
-                  {searchTerm || filterPeriod !== "all" 
+                <p className="text-gray-300">
+                  {searchTerm || filterPeriod !== "all"
                     ? "No posts match your current search or filter criteria."
                     : "No trading performance posts available yet."
                   }
@@ -284,29 +219,13 @@ export default function PostsPage() {
                       setSearchTerm("")
                       setFilterPeriod("all")
                     }}
-                    className="btn-material"
+                    className="btn-material mt-4"
                   >
                     Clear Filters
                   </Button>
                 )}
               </CardContent>
             </Card>
-          </motion.div>
-        )}
-
-        {/* Results Summary */}
-        {!loading && filteredPosts.length > 0 && (
-          <motion.div
-            className="mt-12 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-          >
-            <p className="text-gray-400">
-              Showing {filteredPosts.length} of {posts.length} trading performance posts
-              {searchTerm && ` for "${searchTerm}"`}
-              {filterPeriod !== "all" && ` in the last ${filterPeriod}`}
-            </p>
           </motion.div>
         )}
       </div>
