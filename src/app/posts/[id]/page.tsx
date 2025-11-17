@@ -57,7 +57,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   const activeTab = tab || 'details'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+    <div className="min-h-screen bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <PerformancePostDetails post={post} activeTab={activeTab} />
         <div className="mt-12">
