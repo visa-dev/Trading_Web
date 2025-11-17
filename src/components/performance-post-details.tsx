@@ -68,33 +68,33 @@ export function PerformancePostDetails({ post, activeTab }: PerformancePostDetai
     return "N/A"
   }
 
-const getYouTubeVideoId = (url: string) => {
-  if (!url) return null
-  const patterns = [
-    /youtu\.be\/([^?&#]+)/,
-    /youtube\.com\/embed\/([^?&#]+)/,
-    /youtube\.com\/watch\?v=([^?&#]+)/,
-    /youtube\.com\/shorts\/([^?&#]+)/,
-    /youtube\.com\/live\/([^?&#]+)/,
-  ]
+  const getYouTubeVideoId = (url: string) => {
+    if (!url) return null
+    const patterns = [
+      /youtu\.be\/([^?&#]+)/,
+      /youtube\.com\/embed\/([^?&#]+)/,
+      /youtube\.com\/watch\?v=([^?&#]+)/,
+      /youtube\.com\/shorts\/([^?&#]+)/,
+      /youtube\.com\/live\/([^?&#]+)/,
+    ]
 
-  for (const pattern of patterns) {
-    const match = url.match(pattern)
-    if (match?.[1]) {
-      return match[1]
+    for (const pattern of patterns) {
+      const match = url.match(pattern)
+      if (match?.[1]) {
+        return match[1]
+      }
     }
+    return null
   }
-  return null
-}
 
-const getEmbeddedVideoUrl = (url: string | null | undefined) => {
-  if (!url) return null
-  const videoId = getYouTubeVideoId(url)
-  if (videoId) {
-    return `https://www.youtube.com/embed/${videoId}`
+  const getEmbeddedVideoUrl = (url: string | null | undefined) => {
+    if (!url) return null
+    const videoId = getYouTubeVideoId(url)
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`
+    }
+    return url
   }
-  return url
-}
 
   const hasProfitLoss = isPerformance && typeof post.profitLoss === "number" && Number.isFinite(post.profitLoss)
   const profitLossValue = hasProfitLoss ? post.profitLoss! : null
@@ -107,25 +107,58 @@ const getEmbeddedVideoUrl = (url: string | null | undefined) => {
   const winRateDisplay = formatPercentage(winRateValue)
   const drawdownDisplay = formatPercentage(drawdownValue)
   const riskRewardDisplay = typeof riskRewardValue === "number" ? riskRewardValue.toFixed(2) : "N/A"
-  const descriptionText = post.description?.trim() || "No description provided."
+  const descriptionText = formatDescription(post?.description?.trim()||"");
+
+
+  function formatDescription(text: string) {
+    if (!text) return "No description provided.";
+
+    return text
+      // Add line breaks before common section headers
+      .replace(/(Today's Range:)/g, "\n$1")
+      .replace(/(Weekend Change:)/g, "\n$1")
+      .replace(/(Status:)/g, "\n$1")
+      .replace(/(WEEKEND RECAP)/g, "\n\n$1")
+      .replace(/(TECHNICAL ANALYSIS)/g, "\n\n$1")
+      .replace(/(TECHNICAL INDICATORS)/g, "\n\n$1")
+      .replace(/(TODAY'S TRADING STRATEGIES)/g, "\n\n$1")
+      .replace(/(SCENARIO)/g, "\n\n$1")
+      .replace(/(FUNDAMENTAL ANALYSIS)/g, "\n\n$1")
+      .replace(/(GAME PLAN)/g, "\n\n$1")
+      .replace(/(BOTTOM LINE)/g, "\n\n$1")
+      .replace(/(CRITICAL WARNINGS)/g, "\n\n$1")
+      .replace(/(SUMMARY)/g, "\n\n$1")
+      .replace(/(FORECAST)/g, "\n\n$1")
+
+      // Add line breaks before emojis (universal)
+      .replace(/(💰|⚡|📉|🎯|📊|📈|🔥|💎|🌍|📅|🏆|💡|🔔|🚨|⚠️)/g, "\n$1")
+
+      // Replace multiple spaces with one (cleanup)
+      .replace(/\s{2,}/g, " ")
+
+      // Ensure double line spacing after big paragraphs
+      .replace(/\n{1,}/g, "\n\n")
+      .trim();
+  }
+
   const profitBadgeClasses = isPerformance
     ? (hasProfitLoss
-        ? (isProfitable
-            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
-            : "bg-gradient-to-r from-red-500 to-pink-500 text-white")
-        : "bg-gradient-to-r from-slate-600 to-slate-700 text-white/80")
+      ? (isProfitable
+        ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white"
+        : "bg-gradient-to-r from-red-500 to-pink-500 text-white")
+      : "bg-gradient-to-r from-slate-600 to-slate-700 text-white/80")
     : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
   const profitCardClasses = isPerformance
     ? (hasProfitLoss
-        ? (isProfitable
-            ? "bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20"
-            : "bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20")
-        : "bg-gradient-to-br from-slate-600/10 to-slate-700/10 border-slate-500/20")
+      ? (isProfitable
+        ? "bg-gradient-to-br from-emerald-500/10 to-green-500/10 border-emerald-500/20"
+        : "bg-gradient-to-br from-red-500/10 to-pink-500/10 border-red-500/20")
+      : "bg-gradient-to-br from-slate-600/10 to-slate-700/10 border-slate-500/20")
     : "bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border-blue-500/20"
   const profitTextColor = isPerformance
     ? (hasProfitLoss
-        ? (isProfitable ? "text-green-400" : "text-red-400")
-        : "text-gray-400")
+      ? (isProfitable ? "text-green-400" : "text-red-400")
+      : "text-gray-400")
     : "text-blue-300"
   const embeddedVideoUrl = getEmbeddedVideoUrl(post.videoUrl)
 
@@ -171,7 +204,7 @@ const getEmbeddedVideoUrl = (url: string | null | undefined) => {
                     {post.title}
                   </CardTitle>
                 </motion.div>
-                
+
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -199,15 +232,15 @@ const getEmbeddedVideoUrl = (url: string | null | undefined) => {
                   </div>
                 </motion.div>
               </div>
-              
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <div className="flex flex-col items-end space-y-2">
-                  <Badge 
-                    variant={isPerformance ? (hasProfitLoss ? (isProfitable ? "default" : "destructive") : "secondary") : "default"} 
+                  <Badge
+                    variant={isPerformance ? (hasProfitLoss ? (isProfitable ? "default" : "destructive") : "secondary") : "default"}
                     className={`text-lg px-6 py-3 ${profitBadgeClasses} border-0 shadow-lg`}
                   >
                     {isPerformance ? (
@@ -242,7 +275,7 @@ const getEmbeddedVideoUrl = (url: string | null | undefined) => {
             >
               {/* Image Section */}
               {post.imageUrl && (
-                <motion.div 
+                <motion.div
                   className="aspect-video overflow-hidden rounded-xl shadow-2xl"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -255,22 +288,23 @@ const getEmbeddedVideoUrl = (url: string | null | undefined) => {
                   />
                 </motion.div>
               )}
-              
+
               {/* Description Section */}
-              <motion.div 
+              <motion.div
                 className="prose max-w-none"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.9 }}
               >
-                <p className="text-lg text-gray-300 leading-relaxed">
+                <div className="whitespace-pre-wrap text-[15px] leading-7">
                   {descriptionText}
-                </p>
+                </div>
+
               </motion.div>
 
               {/* Metrics Grid */}
               {isPerformance ? (
-                <motion.div 
+                <motion.div
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -397,26 +431,26 @@ const getEmbeddedVideoUrl = (url: string | null | undefined) => {
 
               {/* Video Section */}
               {post.videoUrl && (
-                <motion.div 
+                <motion.div
                   className="aspect-video rounded-xl overflow-hidden shadow-2xl"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 1.5 }}
                 >
-          {embeddedVideoUrl ? (
-            <iframe
-              src={embeddedVideoUrl}
-              title={post.title}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              sandbox="allow-scripts allow-same-origin allow-presentation"
-              allowFullScreen
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-900 flex items-center justify-center text-gray-400 text-sm">
-              Unable to load video. Please check the link.
-            </div>
-          )}
+                  {embeddedVideoUrl ? (
+                    <iframe
+                      src={embeddedVideoUrl}
+                      title={post.title}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      sandbox="allow-scripts allow-same-origin allow-presentation"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-900 flex items-center justify-center text-gray-400 text-sm">
+                      Unable to load video. Please check the link.
+                    </div>
+                  )}
                 </motion.div>
               )}
             </motion.div>
