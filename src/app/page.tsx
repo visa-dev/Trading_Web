@@ -166,9 +166,8 @@ export default function Home() {
     ? accountPerformanceLinks
     : accountPerformanceLinks.slice(0, 2)
 
-  const visibleAnalyticsPosts = showAllAnalytics
-    ? analyticsPosts
-    : analyticsPosts.slice(0, 6)
+  const visibleAnalyticsPosts = showAllAnalytics ? analyticsPosts : analyticsPosts.slice(0, 3)
+
 
   const visiblePerformancePosts = showAllPerformance
     ? performancePosts
@@ -311,7 +310,7 @@ export default function Home() {
                   </motion.div>
                 ))}
               </motion.div>
-              {analyticsPosts.length > 6 && (
+              {analyticsPosts.length > 3 && (
                 <motion.div
                   className="text-center mt-12"
                   initial={{ opacity: 0, y: 20 }}
@@ -333,7 +332,7 @@ export default function Home() {
                     ) : (
                       <>
                         <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3" />
-                        Show More Analytics ({analyticsPosts.length - 6} more)
+                        Show More Analytics ({analyticsPosts.length - 3} more)
                       </>
                     )}
                   </motion.button>
